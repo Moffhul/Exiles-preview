@@ -1,0 +1,30 @@
+{
+	# Makes Nexerelin treat refugees as a real faction (counted by SectorManager.reinitLiveFactions):
+	# gets a diplomacy profile + forced-visible intel tab when it owns a market. Without this file,
+	# refugees fall back to the NEUTRAL default config (playableFaction:false) and are skipped entirely.
+	"playableFaction":true,
+
+	# Not a player-selectable start, and not auto-spawned as a starting faction (Exiles is corvus-mode
+	# only; refugee colonies come from our econ-JSON, not Nex world-gen).
+	"startingFaction":false,
+
+	# Works in the vanilla-layout (corvus) sector; Exiles does not support Nex random-core worlds.
+	"corvusCompatible":true,
+
+	# --- Demilitarization (docs/EXILES_NEXERELIN_COMPAT.md §3.3): playableFaction:true's
+	# defaults would make refugees a military power — invasions, TWO special-forces fleets,
+	# a strategic-AI brain, vengeance hunter-killers. All zeroed: "NOT a military power;
+	# weaker than the Independents" is a NON-NEGOTIABLE guardrail (CLAUDE.md §3). ---
+	"canInvade":false,             # degrade would-be invasions to raids...
+	"invasionPointMult":0,         # ...and never accumulate invasion points at all
+	"specialForcesMaxFleets":0,    # no refugee special task groups (Nex default is 2!)
+	"useStrategicAI":false,        # no Nex strategic-AI brain scheming for them
+	"vengeanceFleetSizeMult":0,    # no hunter-killer fleets against the player
+	"noRandomizeRelations":true,   # protect the scripted stance under random-relations starts
+	"noSyncRelations":true,        # player<->refugee rep is Phase-2 quest currency - never sync
+	"morality":"good",
+	"colonyExpeditionChance":0,    # explicit for clarity - no refugee colony expeditions
+	# Diplomacy stays ENABLED on purpose: they "negotiate when possible" (ceasefire/aid events
+	# are on-fiction). If their DiplomacyBrain ever DECLARES WAR in testing, add
+	# "diplomacyNegativeChance":{ "default":0.5 } or fall back to disableDiplomacy:true.
+}

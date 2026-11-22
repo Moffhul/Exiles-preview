@@ -1,0 +1,15 @@
+{
+    "displayName": "Standard",
+    "fluxCapacitors": 4,
+    "fluxVents": 6,
+    "goalVariant": true,
+    "hullId": "HaT_clodhopper",
+    "hullMods": ["insulatedengine"],
+    "permaMods": [],
+    "variantId": "HaT_clodhopper_Standard",
+    "weaponGroups": [{
+        "autofire": true,
+        "mode": "LINKED",
+        "weapons": {"WS 003": "lightdualmg"}
+    }]
+}

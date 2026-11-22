@@ -1,0 +1,21 @@
+{
+	# Pass 7 step 7e-1 (Sean, 2026-10-31): Midan-built Medusas for the Strike Force's escort groups,
+	# a strike ship beside (not instead of) the Hammerheads. Like the Omen, a non-League hull in a
+	# "League" fleet is a deliberate "something is off" clue. The sprite is a PLACEHOLDER copy of
+	# vanilla's Medusa at an Exiles path (never vanilla's path, which would recolour every Medusa in
+	# the Sector); final art is a file swap.
+	"baseHullId":"medusa",
+	"skinHullId":"exile_medusa",
+	"hullName":"Medusa",
+	"descriptionId":"medusa",
+	# Skin tags REPLACE the base hull's (same as exile_omen.skin): no faction knows the hull, no
+	# market sells it, no raid drops its blueprint. Only the explicit Strike Force lists field it.
+	"tags":["no_dealer","no_bp_drop"],
+	"spriteName":"graphics/ships/medusa/medusa.png",
+	"removeWeaponSlots":[],
+	"removeEngineSlots":[],
+	"removeBuiltInMods":[],
+	"removeBuiltInWeapons":[],
+	"builtInWeapons":{
+	},
+}

@@ -1,0 +1,90 @@
+{
+	# =========================================================================================
+	#  EXILES — CUSTOM STAR-SYSTEM PLACEMENT
+	# =========================================================================================
+	#  Controls WHERE the deferred custom systems are dropped onto the hyperspace map each new
+	#  game. These systems are generated in ExilesModPlugin.onNewGameAfterProcGen() — i.e. AFTER
+	#  vanilla lays down its procedural constellations — specifically so they do NOT trigger
+	#  vanilla's constellation keep-out, which is what was carving the isolated "spotlight" gap
+	#  around every custom system. See CLAUDE.md and docs/EXILES_SYSTEM_PLACEMENT.md.
+	#
+	#  NOTE: Xechas (the player start) is deliberately NOT listed here. It stays fixed in
+	#  onNewGame() so NGCSetStartingLocation resolves on the proven early path.
+	#
+	#  HOW IT WORKS
+	#    * Each cluster has a nominalCenter and a jitterRadius. Every new game the cluster ANCHOR
+	#      is randomly nudged to somewhere within jitterRadius of nominalCenter.
+	#    * Each member is placed at a fixed offset from the (jittered) anchor, so a cluster keeps
+	#      its internal shape no matter where the anchor lands.
+	#    * A proximity DETECTOR re-rolls the anchor to (a) avoid dropping any member on top of an
+	#      existing system and (b) prefer an anchor that has a procgen neighbor within reach — that
+	#      neighbor is what removes the isolated-spotlight look and pulls the system into the field.
+	#
+	#  TUNING NOTES  (edit freely; takes effect on the next NEW game — this only runs at worldgen)
+	#    * Units are hyperspace units. Roughly 2000 units = 1 light-year.
+	#    * nominalCenter / jitterRadius / offset are all [x, y] where noted.
+	#    * MARKET systems (midan, sallee, lundy, providence): keep jitterRadius SMALL, and if you
+	#      move a nominalCenter, mirror it in data/campaign/starmap.json (that file feeds econ
+	#      trade-distance at load). MARKETLESS systems (omicron cluster, meridian) have no such
+	#      tie — jitter them as far as you like.
+	#    * joinConstellation=true makes that system a labeled member of the nearest procgen
+	#      constellation (reads as native, shares its constellation name). Leave false for the
+	#      secret systems you do NOT want surfaced/labeled.
+	#    * themeHidden=true adds THEME_HIDDEN + THEME_SPECIAL, which keeps pirate/Path bases,
+	#      random missions, derelicts and survey intel OUT of the system. Defaults false so this
+	#      build changes no content behavior until you opt a system in.
+	# =========================================================================================
+
+	"detector": {
+		"minSeparationFromAnySystem": 3000,   # reject any candidate that drops a member closer than this to an existing system (no overlapping icons)
+		"preferNeighborWithin": 10000,        # prefer an anchor that has a procgen neighbor within this range (kills the gap). Soft: falls back to best-available if the region is genuinely empty (e.g. deep fringe)
+		"maxPlacementAttempts": 48            # anchor re-rolls per cluster before taking the best-scoring candidate
+	},
+
+	"clusters": {
+
+		# --- Omicron cluster: four hidden nodes, far west, spread apart. MARKETLESS -> free jitter. ---
+		"omicron": {
+			"nominalCenter": [ -41000, -3500 ],
+			"jitterRadius": 3500,
+			"members": {
+				"omicron": { "offset": [ -3500,  1000 ], "joinConstellation": true, "themeHidden": false },
+				"cipher":  { "offset": [ -1500, -9200 ], "joinConstellation": true, "themeHidden": false },
+				"vigil":   { "offset": [   400, 11800 ], "joinConstellation": true, "themeHidden": false },
+				"lattice": { "offset": [  4500, -3500 ], "joinConstellation": true, "themeHidden": false },
+			},
+		},
+
+		# --- Black Fleet eastern group: Mourad's anchors + Meridian ruins on the retreat line. ---
+		#     sallee & lundy are MARKET (small jitter + starmap sync); meridian is MARKETLESS.
+		"blackFleet": {
+			"nominalCenter": [ 29000, -4000 ],
+			"jitterRadius": 2500,
+			"members": {
+				"sallee":   { "offset": [ -4500, -6500 ], "joinConstellation": true, "themeHidden": false },
+				"lundy":    { "offset": [  -500,  1500 ], "joinConstellation": true, "themeHidden": false },
+				"meridian": { "offset": [  7000,  5500 ], "joinConstellation": true, "themeHidden": false },
+			},
+		},
+
+		# --- Midan: hidden faction home, far east. MARKET -> small jitter + starmap sync. ---
+		"midan": {
+			"nominalCenter": [ 44000, 8500 ],
+			"jitterRadius": 2500,
+			"members": {
+				"midan": { "offset": [ 0, 0 ], "joinConstellation": true, "themeHidden": false },
+			},
+		},
+
+		# --- Ashen Crusade / Providence: currently a TEST location; retune nominalCenter north. ---
+		#     MARKET -> small jitter + starmap sync (update starmap.json when you move it).
+		"ashen": {
+			"nominalCenter": [ -8000, 26000 ],
+			"jitterRadius": 2500,
+			"members": {
+				"providence": { "offset": [ 0, 0 ], "joinConstellation": true, "themeHidden": false },
+			},
+		},
+
+	}
+}

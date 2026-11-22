@@ -1,0 +1,49 @@
+{
+    "displayName": "Customized",
+    "fluxCapacitors": 30,
+    "fluxVents": 30,
+    "goalVariant": false,
+    "hullId": "champion",
+    "hullMods": ["dedicated_targeting_core"],
+    "permaMods": ["insulatedengine"],
+    "sMods": ["insulatedengine"],
+    "variantId": "exiles_midan_champion_assault",
+    "weaponGroups": [
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {
+                "WS 000": "ioncannon",
+                "WS 001": "ioncannon",
+                "WS 010": "ioncannon",
+                "WS 011": "ioncannon"
+            }
+        },
+        {
+            "autofire": false,
+            "mode": "LINKED",
+            "weapons": {"WS 009": "hammerrack"}
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {
+                "WS 006": "heavyac",
+                "WS 007": "heavyac"
+            }
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {"WS 008": "guardian"}
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {
+                "WS 004": "pdburst",
+                "WS 005": "pdburst"
+            }
+        }
+    ]
+}

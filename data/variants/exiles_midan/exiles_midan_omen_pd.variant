@@ -1,0 +1,26 @@
+{
+    "displayName": "EW",
+    "fluxCapacitors": 10,
+    "fluxVents": 4,
+    "goalVariant": false,
+    "hullId": "exile_omen",
+    "hullMods": ["hardened_subsystems", "auxiliarythrusters", "missile_autoloader"],
+    "permaMods": [],
+    "sMods": [],
+    "variantId": "exiles_midan_omen_pd",
+    "weaponGroups": [
+        {
+            "autofire": false,
+            "mode": "ALTERNATING",
+            "weapons": {"WS 003": "swarmer"}
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {
+                "WS 001": "pdlaser",
+                "WS 002": "pdlaser"
+            }
+        }
+    ]
+}

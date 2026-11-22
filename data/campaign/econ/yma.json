@@ -1,0 +1,23 @@
+{
+	"starSystem":"yma",
+	"markets":[
+		{
+			"entities":["yma_abandoned_station"],
+			"faction":"exilerefugee",
+			"size": 2,
+			"startingConditions":[
+				"population_2",
+				"volatiles_abundant",
+				"exile_pariah_colony",
+				"exile_destitute_population"
+			],
+			"industries":[
+				"population",
+				"spaceport",
+				"orbitalstation",
+				"exile_broken_siphon",
+				"exile_broken_processor"
+			]
+		}
+	]
+}

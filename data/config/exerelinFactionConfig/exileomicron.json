@@ -1,0 +1,17 @@
+{
+	# Omicron under Nexerelin: TOTAL SHIELDING (docs/EXILES_NEXERELIN_COMPAT.md §3.2).
+	# Marketless/script-only, so it never enters Nex's live-faction census anyway — this
+	# config exists to pin the invariants against Nex features that touch even
+	# non-live factions.
+	"playableFaction":false,       # stays out of census/diplomacy/invasions/respawn
+	"startingFaction":false,
+	"corvusCompatible":true,
+	"disableDiplomacy":true,       # belt-and-braces vs future Nex features
+	"noRandomizeRelations":true,   # protects the scripted matrix under random-relations starts
+	"noSyncRelations":true,        # protects the neutral-to-player stance vs commission rep-sync
+	"dropPrisoners":false,         # machines carry no human prisoners
+	"allowAgentActions":false,
+	"allowPrisonerActions":false,
+	"specialForcesMaxFleets":0,
+	"vengeanceFleetSizeMult":0,
+}

@@ -1,0 +1,259 @@
+id,trigger,conditions,script,text,options,notes
+,,,,,,
+# Omicron: wake the attached complement after attack confirmation and before MarketCMD gathers defenders.,,,,,,
+marketHostileSel,DialogOptionSelected,$option == marketConsiderHostile,"MarketCMD showDefenses
+ExileOmicronStationDefense warn",,,
+marketHostileEngageSel,DialogOptionSelected,$option == mktEngage,"ExileOmicronStationDefense activate
+MarketCMD engage",,,
+,,,,,,
+# new game creation,,,,,,
+ngcExileStart,AddNewGameChoices,!$extendedMode,"SetTooltip ngcExile ""A pair of flying derelicts and a pair of loyal officers.\n\nA difficult start with a long grind, but with a small starting colony outside the core worlds.""",,"9:ngcExile:A mercenary framed for heinous crimes, commanding a pair of heavily damaged ships.",
+,,,,,,
+ngcExileStartExt,AddNewGameChoices,$extendedMode,"SetTooltip ngcExileUnavailable ""Exiles of the Shattered Sector was in development prior to the announcement of Survival Mode. Compatibility pending.\n\nThe Exile start is available in a standard campaign.""
+SetEnabled ngcExileUnavailable false",,9:ngcExileUnavailable:Exiles of the Shattered Sector (compatibility pending),"Survival Mode is not supported yet (Sean, 2026-11-12). Shown greyed out so the player knows why the Exile start is missing; same pattern as vanilla ngcSkipTutorialNoSkip."
+,,,,,,
+ngcExilePicked,NewGameOptionSelected,$option == ngcExile,"NGCAddShip wolf_exile_Starting
+NGCAddShip hound_exile_Starting
+FireAll NGCExileDifficulty",,,
+ngcExileDifficulty,NGCExileDifficulty,,"SetTooltip ngcExileEasy ""- Your ships take 25% less damage\n- Sensor range increased by 500 units\n- Salvage increased by 50%""
+SetTooltipHighlightColors ngcExileEasy hColor hColor hColor
+SetTooltipHighlights ngcExileEasy ""25%"" ""500"" ""50%""
+SetTooltip ngcExileNormal ""Default settings balanced for a challenging experience.""",Select the campaign difficulty level.,"0:ngcExileNormal:Normal
+1:ngcExileEasy:Easy",
+ngcExileEasyPicked,NewGameOptionSelected,$option == ngcExileEasy,"$ngcSkipTutorial = true
+ExileStartingFines
+NGCAddCharacterPoints 1
+NGCSetStartingLocation Xechas 2500 -3000
+ExileAddStartingScript
+#NGCSetWithTimePass false
+NGCDone",,,
+ngcExileNormalPicked,NewGameOptionSelected,$option == ngcExileNormal,"NGCSetDifficulty normal
+$ngcSkipTutorial = true
+ExileStartingFines
+NGCAddCharacterPoints 1
+NGCSetStartingLocation Xechas -2500 -3000
+ExileAddStartingScript
+#NGCSetWithTimePass false
+NGCDone",,,
+ngcExileStory1,NGCExileStory1,,,"The contract stank. As a skipper, you said so.
+
+That got you busted to navigation. Your first officer got your Wolf. You got a cell on Tapper�s flagship until the raid on Nachiketa was done.
+
+From your cell you smelled fresh hull paint and listened to the guards complain. Weeks of boredom� followed by helpless terror.","1:ngcExileStory2:Page 1 of 5  Continue
+2:ngcExileStory5:Skip to end",
+ngcExileStory2,NGCExileStory2,$option == ngcExileStory2,,"The last hours are just fragments blurred by cryosleep.
+
+Alarms. Explosions. Darkness. Smoke and so many screams�
+
+Your marine officer in the doorway. A scramble in zero-g to a docked Hound, already filling with crew�
+
+A titanic flash over Nachiketa. The jump to hyperspace�
+
+Ruptured fuel tanks. Cryopods...
+
+Nothing�","1:ngcExileStory3:Page 2 of 5  Continue
+2:ngcExileStory5:Skip to end",
+ngcExileStory3,NGCExileStory3,$option == ngcExileStory3,,"The Wolf and the Hound drifted together somehow. You set the course. Rolled the dice. Drifted into an abandoned system. Luck held. Barely.
+
+You woke to alarms. Not battle�systems failing.
+
+Cryopods kept most of you alive. Everything else fell apart. With life support failing, you had hours at best.
+
+Two worlds with ruins. No time. You put people planetside. Engineers attempted repairs.
+","1:ngcExileStory4:Page 3 of 5  Continue
+2:ngcExileStory5:Skip to end",
+ngcExileStory4,NGCExileStory4,$option == ngcExileStory4,,"Days have passed. You finally have the drives online, but no fuel.
+
+There�s too many survivors for life support to handle. People are staying behind.
+
+You have tiny settlements on two planets. 
+One green, alive, and trying to kill you in a thousand ways.
+The other dry, hot, and rich enough to matter.
+Between them, it should be enough.
+
+For now.",1:ngcExileStory5:Page 4 of 5  Continue,
+ngcExileStory5,NGCExileStory5,$option == ngcExileStory5,,"The contract stank. Nachiketa was a bust. Tapper abandoned all of you.
+
+Time to look to the future. People are depending on you to get them home.
+
+Three priorities now:
+There�s a comm relay in-system you could bring online.
+Check on your people. See what they�ve scrounged.
+And then�
+
+Decide what happens next.",1:ngcExileStartEnd:Page 4 of 4  End,
+ngcExileStartEnd,,,"$ngcSkipTutorial = true
+ExileStartingFines
+NGCAddCharacterPoints 1
+NGCSetStartingLocation Xechas -2500 -3000
+ExileAddStartingScript
+#NGCSetWithTimePass false
+NGCDone",,,
+"# --- Omicron array drone screens: dialog-layer defenders (Domain survey-ship pattern). The buoys are never destroyed; beating the screen unlocks the stock objective interaction until $defenderFleetDefeated expires (~30d). ---",,,,,,
+exArr_open,OpenInteractionDialog,$tag:exile_omicron_array score:200,"SalvageGenFromSeed
+FireBest ExArrAfterGen",,,
+exArr_screenUp,ExArrAfterGen,$hasDefenders,"ShowDefaultVisual
+SetShortcut exArr_leave ESCAPE","Your sensors paint a lattice of dormant drones clamped to the buoy's mounting frame. As your $shipOrFleet closes, they detach in perfect unison and slide into an interdiction formation between you and the array. No warning is broadcast. The machines are simply waiting.","0:exArr_engage:Engage the drone screen
+100:exArr_leave:Leave",
+exArr_screenDown,ExArrAfterGen,,"ShowDefaultVisual
+FireAll COB_AddOptions
+FireBest COB_DisableOptionsIfNeeded
+FireAll COB_DisableIndividualOptions",,,
+exArr_engageSel,DialogOptionSelected,$option == exArr_engage,FireBest TriggerAutomatedDefenses,,,
+exArr_leaveSel,DialogOptionSelected,$option == exArr_leave,DismissDialog,,,
+exArr_defenderDesc,TriggerAutomatedDefenses,$tag:exile_omicron_array score:200,SalvageDefenderInteraction,"The drone screen accelerates in eerie synchrony, weapons charging as one.",,
+exArr_beatDefenders,BeatDefendersContinue,$tag:exile_omicron_array score:200,"$defenderFleetDefeated = true 30
+FireBest ExArrAfterGen","The last drone tumbles away in fragments, and the buoy's interface accepts your handshake without complaint — the machine does not appear to hold grudges. Its replacement screen is doubtless already being assembled.",,
+"# --- Omicron core contact turn-ins: override only the three vanilla AICores command calls so preview and award share the same 2/3/5 calculation. ---",,,,,,
+aiCores_turnInOption,PopulateOptions,"$isPerson
+ExileAICores personCanAcceptCores
+!$tag:dont_take_ai_cores",FireBest DisableTurnInCoresOptionIfNeeded,,"10:aiCores_startTurnIn:""I'd like to turn in these AI cores that I've acquired...""",
+aiCores_disableTurnInOption,DisableTurnInCoresOptionIfNeeded,!ExileAICores playerHasCores,"SetTooltip aiCores_startTurnIn ""You do not have any AI cores in your possession.""
+SetEnabled aiCores_startTurnIn false",,,
+aiCores_turnInOptionSelected,DialogOptionSelected,$option == aiCores_selectCores,ExileAICores selectCores,,,
+"# --- PASS 8a-1: Heg-League player stops (docs/EXILES_PASS8_PLAN.md sec 11). Vanilla rule commands only; ALL prose is placeholder. ---",,,,,,
+exileHLStopBegin,BeginFleetEncounter,"!$hassle_didAlready
+!$isHostile
+$pursuePlayer_hassle score:50
+$exiles_hl_stop","$hassle_didAlready = true 0
+$hassleComplete = true
+MakeOtherFleetPreventDisengage exileHLStop true
+unset $ignorePlayerCommRequests
+$exiles_hl_stopConv = true 0
+$exiles_hl_stopOutcome = cut 3
+HailPlayer",,,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommRaider,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == raider
+$entity.relativeStrength >= 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+FireAll ExileHLStopOptions","The link opens on a $faction $post who does not bother to straighten up. ""Heave to. This volume is under wartime interdiction and every hull in it gets looked over.""
+
+$HeOrShe glances at something off-image. ""Or we skip the search. $entity.exiles_hl_tollDGS credits says your holds are clean and I never saw you.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommRaiderWeak,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == raider
+$entity.relativeStrength < 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+MakeOtherFleetPreventDisengage exileHLStop false
+FireAll ExileHLStopOptions","The link opens on a $faction $post whose eyes keep drifting to a tactical display. ""This volume is under wartime interdiction. All traffic is subject to search.""
+
+A pause. ""A contribution of $entity.exiles_hl_tollDGS credits would settle the matter."" It sounds more like a question than a demand.",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommOfficialHeg,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == official
+$faction.id == hegemony
+$entity.relativeStrength >= 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+FireAll ExileHLStopOptions","""Unidentified fleet, this is the Hegemony Navy."" The $post reads from a slate without looking up. ""This port is under blockade by order of the High Hegemon. All traffic will stand by for inspection.""
+
+""The inspection fee is $entity.exiles_hl_tollDGS credits if you want it done today. Otherwise my teams will take the time they need.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommOfficialHegWeak,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == official
+$faction.id == hegemony
+$entity.relativeStrength < 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+MakeOtherFleetPreventDisengage exileHLStop false
+FireAll ExileHLStopOptions","""Unidentified fleet, this is the Hegemony Navy."" The $post is very careful with $hisOrHer words. ""This port is under blockade by order of the High Hegemon. You are requested to stand by for inspection.""
+
+""An inspection fee of $entity.exiles_hl_tollDGS credits would expedite matters.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommOfficialPL,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == official
+$faction.id == persean
+$entity.relativeStrength >= 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+FireAll ExileHLStopOptions","""This is a Persean League customs action."" The $post smiles the way a clerk smiles at a queue. ""Approach to this port is restricted for the duration of the emergency. Unlicensed traffic is held for examination.""
+
+""A transit licence is $entity.exiles_hl_tollDGS credits, payable now. Or you may wait for the examination.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCommOfficialPLWeak,OpenCommLink,"$entity.exiles_hl_stopConv score:100
+$entity.exiles_hl_stopKind == official
+$faction.id == persean
+$entity.relativeStrength < 0","$entity.ignorePlayerCommRequests = true 7
+$exiles_hl_price = $entity.exiles_hl_toll 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_supplies 0
+SetTextHighlights $entity.exiles_hl_tollDGS
+MakeOtherFleetPreventDisengage exileHLStop false
+FireAll ExileHLStopOptions","""This is a Persean League customs action."" The $post's smile is thin. ""Approach to this port is restricted for the duration of the emergency, and unlicensed traffic is, in principle, held for examination.""
+
+""A transit licence is $entity.exiles_hl_tollDGS credits. I would recommend it.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptOfficial,ExileHLStopOptions,$faction.exiles_hl_officialBusiness,,,"3:exileHLStopOfficial:""I am here on official business for the $faction. Check your orders.""",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptCodes,ExileHLStopOptions,$faction.exiles_authCodes,,,4:exileHLStopCodes:Transmit your authorization codes,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptWaiver,ExileHLStopOptions,$entity.exiles_hl_commissioned,,,"5:exileHLStopWaiver:""I hold a commission with the $faction. Check your registry.""",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptComply,ExileHLStopOptions,,,,10:exileHLStopComply:Submit to the inspection,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptPay,ExileHLStopOptions,,DoCanAffordCheck $exiles_hl_price exileHLStopPay,,20:exileHLStopPay:Pay $exiles_hl_priceDGS credits and be on your way,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptPaySupplies,ExileHLStopOptions,"$entity.exiles_hl_stopKind == raider
+$player.supplies >= $exiles_hl_supplyPrice",,,25:exileHLStopPaySupplies:Hand over $exiles_hl_supplyPrice units of supplies instead,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptNegotiate,ExileHLStopOptions,"!$exiles_hl_negotiated
+!$exiles_hl_caught
+RepIsAtWorst $faction.id WELCOMING",,,"30:exileHLStopNegotiate:""We both know that figure is for strangers. I am not a stranger.""",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptLie,ExileHLStopOptions,!$exiles_hl_lied,,,"40:exileHLStopLie:""One of your patrols cleared this fleet not an hour ago."" (lie)",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptRefuse,ExileHLStopOptions,"$entity.relativeStrength >= 0
+!$exiles_hl_refused",,,"50:exileHLStopRefuse:""No. You have no authority over this fleet.""",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptRefuseStronger,ExileHLStopOptions,$entity.relativeStrength < 0,,,"50:exileHLStopRefuseStronger:""With that fleet? You are in no position to demand anything.""",PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOptCut,ExileHLStopOptions,,,,100:cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopComplySel,DialogOptionSelected,$option == exileHLStopComply,"MakeOtherFleetPreventDisengage exileHLStop false
+ApplyCRDamage $entity.fleetPoints $entity.exiles_hl_crWeight 1 ""Wartime inspection""
+$entity.exiles_hl_stopOutcome = complied 3","The boarding teams take their time. Hatches are opened that have not been opened in years, manifests are read line by line, and nothing is put back where it was found.
+
+""You are free to go,"" the $post says at last, already looking at the next contact.",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopPaySel,DialogOptionSelected,$option == exileHLStopPay,"AddRemoveCommodity credits -$exiles_hl_price true
+$entity.exiles_hl_stopPaid = $exiles_hl_price 3
+$entity.exiles_hl_stopOutcome = paid 3
+MakeOtherFleetPreventDisengage exileHLStop false","The transfer clears. ""Pleasure,"" the $post says, and the link closes before you can answer.",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopPaySuppliesSel,DialogOptionSelected,$option == exileHLStopPaySupplies,"AddRemoveCommodity supplies -$exiles_hl_supplyPrice true
+$entity.exiles_hl_stopPaid = $exiles_hl_supplyPrice 3
+$entity.exiles_hl_stopOutcome = paid_supplies 3
+MakeOtherFleetPreventDisengage exileHLStop false","A shuttle comes alongside and leaves heavier than it arrived. ""That will do,"" the $post says. ""Safe flying.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopWaiverSel,DialogOptionSelected,$option == exileHLStopWaiver,"MakeOtherFleetPreventDisengage exileHLStop false
+$entity.exiles_hl_stopOutcome = waived 3","There is a short delay while a registry is consulted. ""So you do."" The $post nods. ""Carry on, $playerName.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopOfficialSel,DialogOptionSelected,$option == exileHLStopOfficial,"MakeOtherFleetPreventDisengage exileHLStop false
+$entity.exiles_hl_stopOutcome = official 3","The $post checks something, and $hisOrHer manner changes. ""Understood. We were not informed. You may proceed.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopCodesSel,DialogOptionSelected,$option == exileHLStopCodes,"MakeOtherFleetPreventDisengage exileHLStop false
+$entity.exiles_hl_stopOutcome = codes 3","The codes are received and, after a moment, accepted. ""Your authorization is in order,"" the $post says. ""You may proceed.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopNegotiateSel,DialogOptionSelected,$option == exileHLStopNegotiate,"$exiles_hl_negotiated = true 0
+$exiles_hl_price = $entity.exiles_hl_tollHalf 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollHalfDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_suppliesHalf 0
+$entity.exiles_hl_stopOutcome = negotiated 3
+SetTextHighlights $entity.exiles_hl_tollHalfDGS
+FireAll ExileHLStopOptions","The $post looks you over again, and something like recognition arrives. ""For you, $entity.exiles_hl_tollHalfDGS. That is as far as I go.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopLieOkSel,DialogOptionSelected,"$option == exileHLStopLie
+RollProbability $entity.exiles_hl_lieChance","MakeOtherFleetPreventDisengage exileHLStop false
+$entity.exiles_hl_stopOutcome = lied_ok 3","The $post frowns at a display, then at you, then at the display again. ""Nobody tells me anything. Fine. Go.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopLieCaughtSel,DialogOptionSelected,$option == exileHLStopLie,"$exiles_hl_lied = true 0
+$exiles_hl_caught = true 0
+AdjustRep $faction.id $entity.exiles_hl_repFloor $entity.exiles_hl_repLie
+$exiles_hl_price = $entity.exiles_hl_tollDouble 0
+$exiles_hl_priceDGS = $entity.exiles_hl_tollDoubleDGS 0
+$exiles_hl_supplyPrice = $entity.exiles_hl_suppliesDouble 0
+$entity.exiles_hl_stopOutcome = lied_caught 3
+SetTextHighlights $entity.exiles_hl_tollDoubleDGS
+FireAll ExileHLStopOptions","""Is that so."" The $post does not check anything. ""I have the log of every stop in this volume in front of me, and you are not in it.""
+
+""The figure is now $entity.exiles_hl_tollDoubleDGS credits. Lying to an officer is expensive.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopRefuseRaiderSel,DialogOptionSelected,"$option == exileHLStopRefuse
+$entity.exiles_hl_stopKind == raider","$exiles_hl_refused = true 0
+MakeOtherFleetLowRepImpact exileHLStop true $entity.exiles_hl_lowImpactDays
+$entity.exiles_hl_stopOutcome = refused_failed 3
+FireAll ExileHLStopOptions","""Authority."" The $post tastes the word. ""My authority is the guns you are looking at. Nobody at home is going to ask what happened to one more trader out here.""
+
+It occurs to you that the same is true in the other direction.",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopRefuseOfficialSel,DialogOptionSelected,$option == exileHLStopRefuse,"$exiles_hl_refused = true 0
+$entity.exiles_hl_stopOutcome = refused_failed 3
+FireAll ExileHLStopOptions","""Your objection is noted and will be entered in the record,"" the $post says, without interest. ""The order stands. You will comply, or you will be treated as a blockade runner.""",,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4
+exileHLStopRefuseStrongerSel,DialogOptionSelected,$option == exileHLStopRefuseStronger,"MakeOtherFleetPreventDisengage exileHLStop false
+AdjustRep $faction.id $entity.exiles_hl_repFloor $entity.exiles_hl_repFaceDown
+$entity.exiles_hl_stopOutcome = backed_down 3","The $post's face goes still. ""On reflection, your papers appear to be in order."" $HeOrShe will remember this. ""Proceed.""",cutCommLinkNoText:Cut the comm link,PLACEHOLDER prose (Pass 8a-1). Mechanics: docs/EXILES_PASS8_PLAN.md sec 11.4

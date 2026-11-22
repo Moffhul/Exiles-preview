@@ -1,0 +1,290 @@
+# exileblackfleet.faction — the Black Fleet, Admiral Mourad's Midan-backed pirate armada.
+# Created 2026-07-07 per the ratified Midan/Black Fleet split: the pirate identity that
+# previously lived inside exilemidan.faction is PROMOTED here (roster/music/portraits/ranks
+# carried over); exilemidan is re-identified as the shadowy Midan proper.
+#
+# DESIGN (CLAUDE.md §4): red-on-red — colors AND flag are deliberately the vanilla Pirates'
+# own ([255,0,0], pirates.png): players SHOULD have difficulty telling the Black Fleet from
+# ordinary pirates (author ruling 2026-07-07). Toughness comes from the Mysterious Stockpiles
+# industry on the two anchor stations (quality via ShipQuality machinery), NOT from a fat
+# doctrine — kill both anchors and their fleets degrade to the doctrine baseline below.
+{
+	id:"exileblackfleet",	# LOAD-BEARING — referenced by sector gen / anchors / lifecycle / director config. Do not change.
+
+	# --- Identity ---------------------------------------------------------------
+	"color":[255,0,0,255],			# = vanilla pirates, verbatim (deliberate)
+	"baseUIColor":[200,0,0,255],	# = vanilla pirates, verbatim (deliberate)
+	"darkUIColor":[85,0,0,175],
+	"gridUIColor":[255,0,0,75],
+	"brightUIColor":[231,98,103,255],
+
+	"displayName":"Black Fleet",
+	"displayNameWithArticle":"the Black Fleet",
+	"displayNameLong":"Black Fleet",
+	"displayNameLongWithArticle":"the Black Fleet",
+	"displayNameIsOrAre":"are",
+	"showInIntelTab":true,
+	"logo":"graphics/factions/exile_black_fleet.png",
+	"crest":"graphics/factions/crest_exile_black_fleet.png",
+	"shipNamePrefix":"",
+	"shipNameSources":{
+		"PIRATES":2,
+		"BEASTS":1,
+		"NORSE":1,
+		"CELTIC":1,
+		"SPACE":1,
+		"GENERAL":1,
+	},
+	"names":{
+		"fringe":1,
+		"modern":1,
+		"world":1,
+		"future":1,
+		"myth":1,
+		"old english":1,
+		"pirate":2,
+	},
+
+	# --- Roster (carried over from the pre-split file: pirate family, unchanged) --
+	"variantOverrides":{
+	},
+	"hullFrequency":{
+		"tags":{
+			"pirate_bp":2,
+		},
+		"hulls":{
+			"falcon_p":0.5, # it's pretty good, so make it more rare
+			"venture":0.3, # it's pretty annoying en masse, so, ditto
+			"venture_p":0.5, # it's also potentially annoying if there's too much of them
+		},
+	},
+	"shipsWhenImporting":{
+		"tags":["base_bp", "pirate_bp", "pirates"],
+		"hulls":[
+			"vanguard_pirates",
+			"manticore_pirates",
+			"falcon_p",
+			"eradicator_pirates",
+			"atlas2",
+		],
+	},
+	"knownShips":{
+		"tags":["base_bp", "pirate_bp", "pirates"],
+		"hulls":[
+			"vanguard_pirates",
+			"manticore_pirates",
+			"falcon_p",
+			"eradicator_pirates",
+			"atlas2",
+		],
+	},
+	"priorityShips":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownFighters":{
+		"tags":["pirates"],
+		"fighters":[
+			"broadsword_wing",
+			"talon_wing",
+			"piranha_wing",
+		],
+	},
+	"priorityFighters":{
+		"tags":[],
+		"fighters":[
+		],
+	},
+	"knownWeapons":{
+		"tags":["base_bp", "lowtech_bp", "midline_bp", "missile_bp", "hightech_bp", "pirates"],
+		"weapons":[
+			"irautolance",
+			"hurricane",
+			"squall",
+			"locust",
+		],
+	},
+	"priorityWeapons":{
+		"tags":[],
+		"weapons":[
+		],
+	},
+	"knownHullMods":{
+		"tags":["base_bp", "pirates", "standard"],
+		"hullMods":[
+			"advancedshieldemitter", # accelerated
+			"turretgyros",
+			"armoredweapons",
+			"converted_hangar",
+			"magazines",
+			"missleracks",
+			"frontshield",  # makeshift
+			"heavyarmor",
+			"insulatedengine",
+			"fluxbreakers",
+			"shield_shunt",
+		],
+	},
+	"illegalCommodities":[
+	],
+
+	# --- Doctrine — "pirates, but tough" BASELINE only ---------------------------
+	# shipQuality/officerQuality bumped 1 -> 2 vs the pre-split file (TUNABLE): a cut
+	# above pirate rabble even with the anchors dead. The real edge is the Mysterious
+	# Stockpiles quality bonus, which dies with the anchors (emergent defeatability).
+	"factionDoctrine":{
+		"warships":5,
+		"carriers":1,
+		"phaseShips":1,
+
+		"officerQuality":2,
+		"shipQuality":2,
+		"numShips":4,
+
+		"shipSize":3,
+
+		"aggression":4,
+
+		"combatFreighterProbability":0.75,
+		"combatFreighterCombatUseFraction":1,
+		"combatFreighterCombatUseFractionWhenPriority":1,
+		"autofitRandomizeProbability":0.75,
+
+		"commanderSkillsShuffleProbability":0,
+		"commanderSkills":[
+			"crew_training",
+			"coordinated_maneuvers"
+		],
+	},
+
+	# --- A/V (carried over: reads as pirates on purpose) -------------------------
+	"music":{
+		"theme":"music_pirates_market_neutral",
+		"market_neutral":"music_pirates_market_neutral",
+		"market_hostile":"music_pirates_market_hostile",
+		"market_friendly":"music_pirates_market_friendly",
+		"encounter_neutral":"music_pirates_encounter_neutral",
+		"encounter_hostile":"music_pirates_encounter_hostile",
+		"encounter_friendly":"music_pirates_encounter_friendly",
+	},
+	"portraits":{
+		"standard_male":[
+			"graphics/portraits/portrait_pirate02.png",
+			"graphics/portraits/portrait_pirate03.png",
+			"graphics/portraits/portrait_pirate07.png",
+			"graphics/portraits/portrait_pirate10.png",
+			"graphics/portraits/portrait_pirate11.png",
+			"graphics/portraits/portrait_pirate12.png",
+			"graphics/portraits/portrait_pirate13.png",
+			"graphics/portraits/portrait_pirate14.png",
+			"graphics/portraits/portrait_pirate15.png",
+			"graphics/portraits/portrait_pirate19.png",
+			"graphics/portraits/portrait_pirate20.png",
+			"graphics/portraits/portrait_mercenary01.png",
+			"graphics/portraits/portrait_mercenary03.png",
+			"graphics/portraits/portrait_mercenary04.png",
+			"graphics/portraits/portrait_mercenary06.png",
+			"graphics/portraits/portrait18.png",
+			"graphics/portraits/portrait20.png",
+			"graphics/portraits/portrait33.png",
+			"graphics/portraits/portrait36.png",
+			"graphics/portraits/portrait40.png",
+		],
+		"standard_female":[
+			"graphics/portraits/portrait_pirate01.png",
+			"graphics/portraits/portrait_pirate04.png",
+			"graphics/portraits/portrait_pirate05.png",
+			"graphics/portraits/portrait_pirate06.png",
+			"graphics/portraits/portrait_pirate08.png",
+			"graphics/portraits/portrait_pirate09.png",
+			"graphics/portraits/portrait_pirate16.png",
+			"graphics/portraits/portrait_pirate17.png",
+			"graphics/portraits/portrait_pirate18.png",
+			"graphics/portraits/portrait_pirate21.png",
+			"graphics/portraits/portrait_pirate22.png",
+			"graphics/portraits/portrait_mercenary02.png",
+			"graphics/portraits/portrait_mercenary05.png",
+			"graphics/portraits/portrait_mercenary07.png",
+			"graphics/portraits/portrait_mercenary08.png",
+			"graphics/portraits/portrait29.png",
+			"graphics/portraits/portrait37.png",
+			"graphics/portraits/portrait39.png",
+			"graphics/portraits/portrait42.png",
+		],
+	},
+	"ranks":{
+		"ranks":{
+			"spaceCommander":{"name":"Captain"},
+		},
+		"posts":{
+			"patrolCommander":{"name":"Captain"},
+			"fleetCommander":{"name":"Fleet Master"},
+			"baseCommander":{"name":"Warboss"},
+			"stationCommander":{"name":"Station King"},
+			"portmaster":{"name":"Portboss"},
+			"administrator":{"name":"Boss"},
+		},
+	},
+	"voices":{
+		"LOW":{
+			"soldier":3,
+			"spacer":10,
+		},
+		"MEDIUM":{
+			"soldier":5,
+			"spacer":10,
+		},
+		"HIGH":{
+			"soldier":5,
+			"spacer":10,
+			"villain":10,
+		},
+	},
+
+	"custom":{
+		"decentralized":true, # prevents faction from offering Security Code and Combat Bounty missions
+		"engageWhenEvenStrength":true,
+		"exemptFromFoodShortages":true,
+		"willTradeWhenHostile":false,
+		"ignoreTradeWithEnemiesForReputation":true,
+		"postsNoBounties":true,
+		"offerMissionsWhenHostile":false,
+		"allowsTransponderOffTrade":true,	# pirates take anyone's money at the black market
+		"patrolsHaveNoPatrolMemoryKey":true,
+		# MIGRATED here from exilemidan per the ratified split: the temp-base spigot is
+		# Black Fleet content ("forward supply bases"). The anchor lifecycle script CLOSES
+		# this spigot at runtime when both anchors are dead (defeatability guarantee).
+		"makesPirateBases":true,
+		"pirateBaseStationTypes":{
+			"orbitalstation":10,
+			"orbitalstation_mid":6,
+			"orbitalstation_high":2,
+		},
+		"fightToTheLast":true, # Mourad's discipline: order a full assault instead of retreating, in most cases
+		"hostilityImpactOnGrowth":true,
+		"punitiveExpeditionData":{
+			"vsCompetitors":false,
+			"vsFreePort":true,
+			"canBombard":true,
+			"territorial":true,
+		},
+		"simulatorData":{
+			"showInSimulator":true,
+		},
+	},
+	"fleetTypeNames":{
+		"smallTrader":"Trade Convoy",
+		"trade":"Trade Convoy",
+		"tradeLiner":"Passenger Convoy",
+		"patrolSmall":"Corsair",
+		"patrolMedium":"Raiders",
+		"patrolLarge":"Armada",
+		"mercScout":"Scout",
+		"mercBountyHunter":"Raiders",
+		"mercPrivateer":"Raiders",
+		"mercPatrol":"Attack Fleet",
+		"mercArmada":"Armada",
+		"taskForce":"Black Armada",
+	},
+}

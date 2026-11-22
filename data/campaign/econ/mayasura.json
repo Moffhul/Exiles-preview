@@ -1,0 +1,22 @@
+{
+	"starSystem":"mayasura",
+	"markets":[
+		{
+			"entities":["mairaath_abandoned_station1"],
+			"faction":"exilerefugee",
+			"size":3,
+			"startingConditions":[
+				"population_3",
+				"exile_pariah_colony",
+				"exile_destitute_population",
+				"ruins_scattered"
+			],
+			"industries":[
+				"population",
+				"spaceport",
+				"orbitalstation",
+				"exile_salvage_yards"
+			]
+		}
+	]
+}

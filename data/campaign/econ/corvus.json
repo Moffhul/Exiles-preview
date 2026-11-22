@@ -1,0 +1,23 @@
+{
+	"starSystem": "corvus",
+	"markets": [
+		{
+			"entities": [
+				"corvus_abandoned_station"
+			],
+			"faction": "exilerefugee",
+			"size": 4,
+			"startingConditions": [
+				"population_4",
+				"exile_pariah_colony",
+				"exile_destitute_population"
+			],
+			"industries": [
+				"population",
+				"spaceport",
+				"orbitalstation",
+				"exile_salvage_yards"
+			]
+		}
+	]
+}

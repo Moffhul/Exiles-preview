@@ -1,0 +1,22 @@
+{
+  "starSystem":"sallee",
+  "markets":[
+    {
+      "entities":["exilebf_sallee_station"],
+      "faction":"exileblackfleet",
+      "size":4,
+      "freePort":true,
+      "startingConditions":[
+        "population_4"
+      ],
+      "industries":[
+        "population",
+        "spaceport",
+        "battlestation",
+        "militarybase",
+        "heavybatteries",
+        "exile_mysterious_stockpiles"
+      ]
+    }
+  ]
+}

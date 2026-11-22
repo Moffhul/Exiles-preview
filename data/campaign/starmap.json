@@ -1,0 +1,26 @@
+{
+	# Keys must match each econ JSON's "starSystem" field OR the game crashes at econ-load
+	# ("Star system id [x] not found in ../starmap.json"). Marketless systems (Omicron cluster,
+	# Meridian) don't strictly need an entry, but are listed for map correctness; they self-
+	# position via getLocation().set() in their generators, so these values just mirror that.
+	# Locations are the authoritative getLocation().set() values from data/scripts/world/systems/.
+	"starSystemLocations":{
+		# --- Player start ---
+		"xechas":[-7200, -29500],
+
+		# --- Traditional custom factions (have econ JSONs: key = "starSystem" field, REQUIRED) ---
+		"exilemidan":[44000, 8500],            # Midan — MUST mirror system_placement.json "midan" nominalCenter (this value is econ trade-distance only; ExileMidan.java sets the real position from the config coord)
+		"exileashencrusade":[-8000, 26000],      # Providence — mirror system_placement.json "ashen" nominalCenter (econ trade-distance only; generator sets real position from config coord)
+		"sallee":[24500, -10500],               # Black Fleet — Mourad's seat (was crashing: key was missing)
+		"lundy":[28500, -2500],                 # Black Fleet — forward supply anchor
+
+		# --- Midan's bombed first colony (marketless ruins) ---
+		"meridian":[36000, 1500],
+
+		# --- Omicron cluster (marketless; replaces the stale "exileomicron0":[-7000,10000]) ---
+		"omicron":[-44500, -2500],
+		"cipher":[-42500, -12700],
+		"vigil":[-40600, 8300],
+		"lattice":[-36500, -7000],
+	}
+}

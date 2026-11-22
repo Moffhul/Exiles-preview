@@ -1,0 +1,15 @@
+{
+	# Exiles hard start under Nexerelin (docs/EXILES_NEXERELIN_COMPAT.md §3.1) — merges into
+	# Nex's customStarts.json. The vanilla rules.csv start (ngcExileStart) never fires under
+	# Nex, so this is the only way a Nexerelin player reaches the Exiles campaign.
+	"starts":[
+		{
+			"id":"exileStart",
+			"name":"Exile",
+			"difficulty":"Very hard",
+			"desc":"A mercenary framed for heinous crimes, commanding a pair of heavily damaged ships. A difficult start with a long climb — but with two fragile colonies waiting outside the core worlds.",
+			"className":"data.scripts.exiles.ExilesNexStart",
+			"randomSector":-1,   # non-random sector only (Exiles patches the vanilla core)
+		},
+	],
+}

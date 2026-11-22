@@ -1,0 +1,388 @@
+# ============================================================================
+# POLISH DRAFT — exilerefugee.faction (do not load directly; proposed replacement
+# for data/world/factions/exilerefugee.faction)
+#
+# Template: exileashencrusade.faction (CLAUDE.md §5 checklist).
+# Guardrails (CLAUDE.md §3): NOT a military power, weaker than the Independents,
+# mostly civilian-hull frigates with standard armaments, runs or negotiates,
+# salvaging/scrapping economy, desperate — not evil. Purpose: make the sector's
+# desperation legible and pressure colonies.
+# The live file was already close; this draft mostly ADDS the missing §5 items
+# (sell frequencies, variantOverrides, shipRoles, music) and fixes small bugs.
+# Comments marked "OPEN QUESTION" need Sean's ruling.
+# ============================================================================
+{
+	id:"exilerefugee",		# LOAD-BEARING — referenced by sector gen / relations / influx condition. Do not change.
+
+	# --- Identity -------------------------------------------------------------
+	# Grey palette kept: they are the color of nobody-in-particular.
+	"color":[150,150,150,255],
+	"baseUIColor":[170,170,170,255],
+	"darkUIColor":[70,70,70,175],
+	"gridUIColor":[150,150,150,75],
+	# Lowercase on purpose (vanilla-independent pattern): "refugees" is a
+	# description, not a nation — prose reads "...attacked by the refugees..."
+	# the way it reads "...the independents...". They have no flag to capitalize.
+	"displayName":"refugees",
+	"displayNameWithArticle":"the refugees",
+	"displayNameLong":"refugees",
+	"displayNameLongWithArticle":"the refugees",
+	"displayNameIsOrAre":"are",
+	"entityNamePrefix":"refugee",
+	"personNamePrefix":"refugee",
+	"personNamePrefixAOrAn":"a",
+	"showInIntelTab":true,
+	"logo":"graphics/factions/neutral_traders.png",		# vanilla asset — no flag of their own is the point
+	"crest":"graphics/factions/crest_neutral.png",		# vanilla asset, verified
+	# ISS kept deliberately: salvaged and begged-for hulls fly under whatever
+	# registry they were scrapped with. A refugee "navy" prefix would be a lie.
+	"shipNamePrefix":"ISS",
+	"shipNameSources":{
+		"GREEK":4,
+		"CELTIC":2,
+		"SPACE":1,
+		"GENERAL":1,
+	},
+	"description":"Not a faction so much as the human wreckage left behind by the Sector's collapse. Gilead farmers burned out by Omicron, civilians displaced by war and economic ruin, whole communities crowded into whatever hulls could still hold air. They survive by salvaging, scrapping, and begging passage between worlds that mostly do not want them. The desperate turn to crime; the meanest sign on with the pirates. Most simply drift, hoping the next system is kinder than the last.",
+	"names":{
+		"modern":1,
+		"world":1,
+		"future":1,
+		"myth":1,
+	},
+
+	# --- Roster ---------------------------------------------------------------
+	# NEW (§5): lock the few real warships to their STANDARD / defensive fits —
+	# "civilian hulls with standard armaments for their type", no elite refits.
+	# Escort/support/PD variants dominate: these ships exist to cover a convoy's
+	# retreat, not to win a battle. All variant ids verified in
+	# starsector-core/data/variants/.
+	"variantOverrides":{
+		"lasher_Standard":5,
+		"lasher_PD":3,
+
+		"vigilance_Standard":5,
+		"vigilance_Support2":3,
+
+		"enforcer_Escort":5,
+		"enforcer_Outdated":4,	# a salvaged relic, which is exactly how they'd get one
+
+		"condor_Support":5,
+		"condor_Strike":2,
+	},
+	# Combat hulls stay RARE — convoys are civilian first (guardrail).
+	# FIX: removed dead "hammerhead":0.2 entry — hammerhead was never in knownShips.
+	"hullFrequency":{
+		"tags":{
+		},
+		"hulls":{
+			"lasher":0.4,
+			"vigilance":0.4,
+			"enforcer":0.25,
+			"condor":0.5,
+		},
+	},
+	"shipsWhenImporting":{
+		"tags":[],
+		"hulls":[
+			"hound",
+			"cerberus",
+			"mudskipper",
+			"buffalo",
+			"tarsus",
+			"mule",
+		],
+	},
+	# Explicit civilian roster — deliberately NOT the broad ind/independent tags,
+	# so they stay strictly weaker than the Independents (guardrail).
+	"knownShips":{
+		"tags":[],
+		"hulls":[
+			"kite",
+			"hound",
+			"cerberus",
+			"mudskipper",
+			"shepherd",
+			"dram",
+			"crig",
+			"tarsus",
+			"mule",
+			"hermes",
+			"gemini",
+			"nebula",
+			"valkyrie",
+			"wayfarer",
+			"starliner",
+			"phaeton",
+
+			# a few real combat ships here and there (kept rare via hullFrequency)
+			"lasher",
+			"vigilance",
+			"enforcer",
+			"condor",
+		],
+	},
+	"priorityShips":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownFighters":{
+		"tags":[],
+		"fighters":[
+			"talon_wing",
+			"broadsword_wing",
+			"mining_drone_wing",	# repurposed salvage drones — their most honest "fighter"
+		],
+	},
+	"priorityFighters":{
+		"tags":[],
+		"fighters":[
+		],
+	},
+	# Cheap, civilian-grade gear only — under-armed by design.
+	"knownWeapons":{
+		"tags":[],
+		"weapons":[
+			"lightmg",
+			"lightdualmg",
+			"lightmortar",
+			"lightac",
+			"lightdualac",
+			"vulcan",
+			"lightneedler",
+			"railgun",
+			"arbalest",
+			"annihilator",
+			"swarmer",
+			"harpoon_single",
+			"salamanderpod",
+			"mininglaser",
+			"miningblaster",
+		],
+	},
+	"priorityWeapons":{
+		"tags":[],
+		"weapons":[
+		],
+	},
+	"knownHullMods":{
+		"tags":["standard"],
+		"hullMods":[
+			"auxiliarythrusters",
+			"augmentedengines",
+			"insulatedengine",
+			"efficiency_overhaul",
+			"solar_shielding",
+			"frontshield",
+			"shield_shunt",
+			"heavyarmor",
+			"hardened_subsystems",
+			"converted_hangar",
+		],
+	},
+
+	# --- Economy flavor (§5, NEW) — a scrapyard, not an arms bazaar -------------
+	# What they sell is what they pulled out of wrecks: PD, mining gear, single-shot
+	# missiles, the odd salvaged railgun. Nothing heavier than "keeps the family alive".
+	"weaponSellFrequency":{
+		"lightmg":5,
+		"lightdualmg":5,
+		"lightmortar":5,
+		"vulcan":5,
+		"lightac":5,
+		"arbalest":5,
+		"annihilator":5,
+		"swarmer":5,
+		"harpoon_single":5,
+		"mininglaser":10,
+		"miningblaster":10,
+	},
+	"fighterSellFrequency":{
+		"mining_drone_wing":10,
+		"talon_wing":5,
+	},
+	# Survival mods: run further, run cheaper, hold together one more jump.
+	"hullmodSellFrequency":{
+		"efficiency_overhaul":10,
+		"insulatedengine":5,
+		"solar_shielding":5,
+		"shield_shunt":5,
+	},
+	# Empty ON PURPOSE: people this desperate outlaw nothing — they cannot afford
+	# to, and they could not enforce it anyway (morally-grey pillar: desperation,
+	# not virtue). AUTHOR RULING 2026-07-06: stays empty — a refugee colony may
+	# receive a GAMMA CORE as a story hook, so ai_cores must remain legal here.
+	"illegalCommodities":[
+	],
+
+	# --- Doctrine — weaker than the Independents across the board (guardrail) --
+	# Green crews (officerQuality 1), scrap hulls (shipQuality 1 → plenty of
+	# d-mods for free), small ships, aggression 1 = breaks off and runs.
+	"factionDoctrine":{
+		"warships":2,
+		"carriers":1,
+		"phaseShips":0,
+
+		"officerQuality":1,
+		"shipQuality":1,
+		"numShips":4,		# lots of hulls, little strength: crowds, not fleets
+
+		"shipSize":2,
+
+		"aggression":1,		# run from fights or negotiate (guardrail)
+
+		"combatFreighterProbability":0.8,
+		"combatFreighterCombatUseFraction":0.75,
+		"combatFreighterCombatUseFractionWhenPriority":1,
+		"autofitRandomizeProbability":0.1,
+
+		"commanderSkillsShuffleProbability":1,
+		"commanderSkills":[
+			"crew_training",
+		],
+	},
+
+	# NEW (§5): even their "combat" role picks are armed civilians — a convoy's
+	# escort screen is mostly freighters with the safeties off.
+	"shipRoles":{
+		"combatSmall":{
+			"includeDefault":true,
+			"hound_Standard":20,
+			"cerberus_Standard":20,
+			"kite_Support":10,
+		},
+		"combatFreighterSmall":{
+			"includeDefault":true,
+			"hound_Standard":10,
+			"shepherd_Frontier":10,
+		},
+		"carrierSmall":{
+			"includeDefault":true,
+			"condor_Support":20,
+		},
+	},
+
+	# --- A/V --------------------------------------------------------------------
+	# NEW (§5): explicit default tracks — they get no anthem of their own.
+	# OPEN QUESTION: swap market tracks to the music_luddite_market_* set for the
+	# Gilead-farmer flavor? (Downside: soundalike overlap with the Ashen Crusade.)
+	"music":{
+		"market_neutral":"music_default_market_neutral",
+		"market_hostile":"music_default_market_hostile",
+		"market_friendly":"music_default_market_friendly",
+		"encounter_neutral":"music_default_encounter_neutral",
+		"encounter_hostile":"music_default_encounter_hostile",
+		"encounter_friendly":"music_default_encounter_friendly",
+	},
+	# All portrait paths are straight from vanilla independent/hegemony sets (on disk).
+	"portraits":{
+		"standard_male":[
+			"graphics/portraits/portrait_hegemony02.png",
+			"graphics/portraits/portrait_hegemony06.png",
+			"graphics/portraits/portrait_mercenary01.png",
+			"graphics/portraits/portrait_mercenary03.png",
+			"graphics/portraits/portrait_mercenary04.png",
+			"graphics/portraits/portrait12.png",
+			"graphics/portraits/portrait13.png",
+			"graphics/portraits/portrait15.png",
+			"graphics/portraits/portrait17.png",
+			"graphics/portraits/portrait18.png",
+			"graphics/portraits/portrait20.png",
+			"graphics/portraits/portrait25.png",
+			"graphics/portraits/portrait26.png",
+			"graphics/portraits/portrait30.png",
+			"graphics/portraits/portrait31.png",
+			"graphics/portraits/portrait33.png",
+			"graphics/portraits/portrait35.png",
+			"graphics/portraits/portrait36.png",
+			"graphics/portraits/portrait40.png",
+		],
+		"standard_female":[
+			"graphics/portraits/portrait_hegemony03.png",
+			"graphics/portraits/portrait_mercenary02.png",
+			"graphics/portraits/portrait_mercenary05.png",
+			"graphics/portraits/portrait14.png",
+			"graphics/portraits/portrait16.png",
+			"graphics/portraits/portrait21.png",
+			"graphics/portraits/portrait22.png",
+			"graphics/portraits/portrait27.png",
+			"graphics/portraits/portrait28.png",
+			"graphics/portraits/portrait29.png",
+			"graphics/portraits/portrait32.png",
+			"graphics/portraits/portrait34.png",
+			"graphics/portraits/portrait37.png",
+			"graphics/portraits/portrait39.png",
+		],
+	},
+	"voices":{
+		"LOW":{
+			"spacer":10,
+			"faithful":5,	# the Gilead diaspora
+		},
+		"MEDIUM":{
+			"spacer":10,
+			"faithful":3,
+		},
+		"HIGH":{
+			"spacer":10,
+		},
+	},
+
+	# Communal, improvised titles — leadership by whoever people will follow,
+	# not by commission.
+	"ranks":{
+		"ranks":{
+			"spaceCommander":{"name":"Convoy Chief"},
+		},
+		"posts":{
+			"patrolCommander":{"name":"Guard Leader"},
+			"fleetCommander":{"name":"Marshal"},
+			"baseCommander":{"name":"De Facto Governor"},	# FIX: was "Defacto"
+			"stationCommander":{"name":"Station Speaker"},
+			"administrator":{"name":"Elder"},
+			"genericMilitary":{"name":"Protector"},
+			"portmaster":{"name":"Dockwarden"},
+			"quartermaster":{"name":"Scrap Reckoner"},		# NEW: the salvage economy's bookkeeper
+			"supplyOfficer":{"name":"Supply Keeper"},
+		},
+	},
+
+	"custom":{
+		"decentralized":true,
+		"allowsTransponderOffTrade":true,
+		"offersCommissions":false,
+		"engagesInHostilities":false,		# guardrail: they do not start wars
+		"willTradeWhenHostile":true,		# NEW: negotiate when possible — even with people shooting at them, they need the credits
+		"buysAICores":false,				# no money for luxuries of any kind — and old Gilead scruples
+		"buysSurveyData":true,				# scavengers pay for places worth picking over
+		"hostilityImpactOnGrowth":true,
+		"caresAboutAtrocities":true,
+		"postsNoBounties":true,
+		"punitiveExpeditionData":{			# all false: they punish no one; they CAN'T
+			"vsCompetitors":false,
+			"vsFreePort":false,
+			"canBombard":false,
+			"territorial":false,
+		},
+		"simulatorData":{
+			"showInSimulator":true,
+		},
+	},
+
+	"fleetTypeNames":{
+		"smallTrader":"Refugee Convoy",
+		"trade":"Refugee Convoy",
+		"tradeLiner":"Exodus Fleet",
+		"patrolSmall":"Caravan Guard",
+		"patrolMedium":"Caravan Guard",
+		"patrolLarge":"Migrant Flotilla",
+		"mercScout":"Scout",
+		# NEW: named salvage fleets — the economic backbone made visible in intel
+		# (pairs with the planned custom Salvaging industry, CLAUDE.md §6).
+		"scavengerSmall":"Scrapper Band",
+		"scavengerMedium":"Salvage Convoy",
+		"scavengerLarge":"Reclamation Fleet",
+		"taskForce":"Exodus Fleet",
+	},
+}

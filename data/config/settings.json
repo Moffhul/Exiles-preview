@@ -1,0 +1,45 @@
+# Exiles settings overrides (merged over vanilla data/config/settings.json at load).
+{
+	# Kill the Galatia Academy stipend (Player Start doc: the player starts broke and
+	# in debt — a free 15k/month for 3 cycles guts the "Player Starts Behind" pillar).
+	# Historical mechanism: NGCAddStandardStartingScript grants the stipend to every
+	# non-Spacer skip-tutorial start. ExileAddStartingScript now completes Galatia with
+	# no stipend. This existing global setting also suppresses vanilla-start stipend
+	# payments while Exiles is enabled and disarms stipends already granted in saves.
+	# NOTE: the author's local starsector-core settings.json happens to have this
+	# hand-set to false from an old playthrough — stock installs ship TRUE, so this
+	# override still applies globally; revisit its scope separately.
+	"enableStipend":false,
+
+	# Unrest deciv-guard (playtest-4, 2026-07-11): vanilla Recent Unrest stacks uncapped and
+	# decays only 1 pt / 90 days, so repeated Black Fleet assaults + Omicron bombardments can
+	# hold a vanilla colony at 0 stability long enough to DECIVILIZE it (observed: Gilead).
+	# true = markets already battered (Recent Unrest >= 4 or stability <= 1) are exempt from
+	# further scripted unrest and assault victim-picks (see ExileUnrestGuard).
+	# PLAYER OPTION: set false if you want the sector to burn for real.
+	"exilesUnrestDecivGuard":true,
+
+	# Omicron tactical-core recovery uses the vanilla FleetEncounterContext path:
+	# base probability by captain core id, multiplied by the stock hull-size settings.
+	# Grade I/II/III intentionally mirror Gamma/Beta/Alpha as the first balance baseline.
+	"drop_prob_officer_exiles_omicron_core_1":0.2,
+	"drop_prob_officer_exiles_omicron_core_2":0.1,
+	"drop_prob_officer_exiles_omicron_core_3":0.05,
+
+	# Precompiled because rules.csv resolves command classes before loose scripts compile.
+	"ruleCommandPackages":["data.scripts.rulecmd"],
+
+	# Named-character portraits (vanilla People/Arroyo pattern): registering here loads the
+	# texture at launch and makes it resolvable via getSpriteName("characters", key). Raw
+	# setPortraitSprite paths on runtime-created persons rendered BLANK in the comm UI
+	# (playtest 2026-07-08, Mourad) because the sprite was never loaded.
+	"graphics":{
+		"characters":{
+			"exile_mourad":"graphics/portraits/characters/Mourad.png",
+			"exile_cunningham":"graphics/portraits/exiles_cunningham_placeholder.png",
+			"exile_omicron_1a":"graphics/portraits/portrait_omicron1a.png",
+			"exile_omicron_2a":"graphics/portraits/portrait_omicron2a.png",
+			"exile_omicron_3a":"graphics/portraits/portrait_omicron3a.png",
+		},
+	},
+}

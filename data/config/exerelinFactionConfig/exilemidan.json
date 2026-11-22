@@ -1,0 +1,18 @@
+{
+	# Midan under Nexerelin (docs/EXILES_NEXERELIN_COMPAT.md §3.2): "must stay hostile to
+	# established powers" is a NON-NEGOTIABLE guardrail (CLAUDE.md §3) — this config pins it
+	# against Nex diplomacy, random-relations starts, and rep-sync. Deliberately NOT
+	# pirateFaction:true (drags in morality/hostility semantics that misrepresent principled
+	# nihilists) and NOT hostileToAll (randomize-branch-only; would fight the scripted matrix).
+	"playableFaction":false,       # aggression stays 100% in Exiles' director scripts (revisit at Phase 1)
+	"startingFaction":false,
+	"corvusCompatible":true,
+	"disableDiplomacy":true,       # no ceasefires or peace treaties, ever
+	"noRandomizeRelations":true,
+	"noSyncRelations":true,
+	# Hostile-to-the-Core cap, with the Black Fleet proxy explicitly exempted. Paired floor
+	# makes the alliance reciprocal with exileblackfleet.json under Nex relation changes.
+	"maxRelationships":{ "default":-0.5, "exileblackfleet":1 },
+	"minRelationships":{ "exileblackfleet":0.5 },
+	"specialForcesMaxFleets":0,
+}

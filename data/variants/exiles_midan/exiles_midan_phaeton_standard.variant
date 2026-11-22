@@ -1,0 +1,22 @@
+{
+    "displayName": "Standard",
+    "fluxCapacitors": 4,
+    "fluxVents": 0,
+    "goalVariant": false,
+    "hullId": "exile_phaeton",
+    "hullMods": ["heavyarmor", "insulatedengine"],
+    "permaMods": [],
+    "sMods": [],
+    "quality": 0.5,
+    "variantId": "exiles_midan_phaeton_standard",
+    "weaponGroups": [{
+        "autofire": true,
+        "mode": "LINKED",
+        "weapons": {
+            "WS 001": "lightdualmg",
+            "WS 002": "lightdualmg",
+            "WS 003": "lightdualmg",
+            "WS 004": "lightdualmg"
+        }
+    }]
+}

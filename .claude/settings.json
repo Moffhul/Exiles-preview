@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd *)",
+      "PowerShell(ls *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(git status *)",
+      "PowerShell(git log *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git show *)",
+      "PowerShell(git branch *)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell(& \"D:/Fractal Softworks/Starsector/mods/Exiles/tools/janino-check.ps1\" *)",
+      "Read(//d/Fractal Softworks/Starsector/**)",
+      "Edit(//c/Users/Danny/.claude/projects/**)",
+      "Write(//c/Users/Danny/.claude/projects/**)",
+      "PowerShell(Where-Object *)",
+      "PowerShell(Select-Object *)",
+      "PowerShell(ForEach-Object *)",
+      "PowerShell(Sort-Object *)",
+      "PowerShell(Measure-Object *)",
+      "PowerShell(Write-Output *)"
+    ]
+  }
+}

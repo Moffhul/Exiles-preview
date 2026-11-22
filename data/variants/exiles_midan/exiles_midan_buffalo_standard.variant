@@ -1,0 +1,16 @@
+{
+    "displayName": "Standard",
+    "fluxCapacitors": 2,
+    "fluxVents": 8,
+    "goalVariant": false,
+    "hullId": "exile_buffalo",
+    "hullMods": ["auxiliarythrusters", "insulatedengine"],
+    "permaMods": [],
+    "sMods": [],
+    "variantId": "exiles_midan_buffalo_standard",
+    "weaponGroups": [{
+        "autofire": true,
+        "mode": "LINKED",
+        "weapons": {"WS 001": "lrpdlaser"}
+    }]
+}

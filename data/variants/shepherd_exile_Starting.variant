@@ -1,0 +1,29 @@
+{
+    "displayName": "Custom",
+    "fluxCapacitors": 10,
+    "fluxVents": 1,
+    "hullId": "shepherd_exile",
+    "hullMods": ["reinforcedhull"],
+    "permaMods": [
+		"faulty_grid",
+		"degraded_engines",
+		"damaged_deck",
+		"degraded_drive_field",
+		"malfunctioning_comms",
+	],
+    "sMods": [],
+    "variantId": "shepherd_exile_Starting",
+    "weaponGroups": [
+        {
+            "autofire": false,
+            "mode": "LINKED",
+            "weapons": {"WS 008": "heatseeker"}
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {"WS 007": "vulcan"}
+        }
+    ],
+    "wings": []
+}

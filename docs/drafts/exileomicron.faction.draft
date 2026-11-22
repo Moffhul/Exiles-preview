@@ -1,0 +1,287 @@
+# ============================================================================
+# POLISH DRAFT — exileomicron.faction (do not load directly; proposed replacement
+# for data/world/factions/exileomicron.faction)
+#
+# Template: exileashencrusade.faction (CLAUDE.md §5 checklist) applied on top of
+# the vanilla remnants.faction skeleton the live file was cloned from.
+# Guardrails (CLAUDE.md §3 + EXILES_OMICRON_ASSET_MODEL.md §4a):
+#   - former Remnant assets, MISCLASSIFIES humans — no malice, NOT Skynet
+#   - NEUTRAL to player, "oddly cooperative"; secret home systems
+#   - showInIntelTab:false is LOAD-BEARING (secrecy) — preserved
+#   - marketless faction (no markets/economy) — sell-frequency blocks are
+#     intentionally OMITTED; there is no store to stock (§5 item addressed by design)
+# Comments marked "OPEN QUESTION" need Sean's ruling.
+# ============================================================================
+{
+	id:"exileomicron",		# LOAD-BEARING — referenced by ExilesSectorGen, ExileOmicron0, director stack. Do not change.
+
+	# --- Identity / naming -------------------------------------------------
+	# FIX for the known intel-prose bug: the article form previously read
+	# lowercase "the omicron initiative" in generated text. Machine-collective
+	# naming: "Omicron" is a proper noun and takes NO article, exactly like a
+	# person's name — prose then renders "...fleets of Omicron..." / "Omicron is".
+	"displayName":"Omicron",
+	"displayNameWithArticle":"Omicron",			# was "the omicron initiative" (lowercase bug)
+	"displayNameLong":"Omicron",
+	"displayNameLongWithArticle":"Omicron",		# was "the AI Drones"
+	# OPEN QUESTION: if you want to keep "Omicron Initiative" as the formal long
+	# name, use "displayNameLong":"Omicron Initiative" +
+	# "displayNameLongWithArticle":"the Omicron Initiative" (capitalized). Dropped
+	# here because "Initiative" implies intent/agenda — slightly off the
+	# "no malice, just misclassification" guardrail.
+	"entityNamePrefix":"Omicron",
+	"personNamePrefix":"Omicron",
+	"personNamePrefixAOrAn":"an",				# FIX: was "a" → "a Omicron officer" is ungrammatical
+	"displayNameIsOrAre":"is",					# FIX: was "are"; a singular machine collective — "Omicron is"
+
+	# TTDS = Tri-Tachyon Drone Ship. Kept deliberately: Omicron IS the former
+	# TT failsafe / Remnant asset stack — the registry prefix is a lore tell.
+	"logo":"graphics/factions/ai_remnant.png",		# vanilla asset, verified
+	"crest":"graphics/factions/crest_ai_remnant.png",	# vanilla asset, verified
+	"shipNamePrefix":"TTDS",
+
+	# --- UI colors (full set per §5 checklist) ------------------------------
+	# AUTHOR RULING 2026-07-06: shifted off vanilla-Remnant teal to a muted violet —
+	# "not too flashy, but easy to read" — so Omicron and Remnant contacts are
+	# distinguishable at a glance. Dark/grid derived from the same hue.
+	"color":[160,120,210,255],
+	"baseUIColor":[170,135,220,255],
+	"darkUIColor":[64,46,88,175],
+	"gridUIColor":[160,120,210,75],
+
+	"showInIntelTab":false,		# LOAD-BEARING — secret home systems; DO NOT flip to true
+
+	"shipNameSources":{
+		"MERCANTILE":1,
+		"SPACE":1,
+		"DERELICT_DRONE":1,
+	},
+	"names":{
+		"ai":1,
+	},
+
+	# --- Roster --------------------------------------------------------------
+	# Curation is via the "remnant" tag — this IS the curated machine roster
+	# (Glimmer/Lumen/Fulgent/Scintilla/Brilliant/Radiant/Nova + remnant wings).
+	# Deliberately no explicit hull list: any hull tagged remnant belongs here,
+	# and the tag keeps the roster in lockstep with vanilla balance passes.
+	"variantOverrides":{
+	},
+	"hullFrequency":{
+		"tags":{
+		},
+		"hulls":{
+		},
+	},
+	"shipsWhenImporting":{		# marketless — never imports; kept for API safety
+		"tags":["remnant"],
+		"hulls":[
+		],
+	},
+	"knownShips":{
+		"tags":["remnant"],
+		"hulls":[
+		],
+	},
+	"priorityShips":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownFighters":{
+		"tags":["remnant"],
+		"fighters":[
+		],
+	},
+	"priorityFighters":{
+		"tags":[],
+		"fighters":[
+		],
+	},
+	# Weapon list is the vanilla Remnant loadout pool (verified against
+	# starsector-core remnants.faction) — needed for autofit on randomized variants.
+	"knownWeapons":{
+		"tags":["base_bp", "lowtech_bp", "midline_bp", "hightech_bp", "missile_bp", "remnant"],
+		"weapons":[
+			"lightneedler",
+			"railgun",
+			"dualflak",
+			"heavymauler",
+			"hveldriver",
+			"heavyneedler",
+			"gauss",
+			"mjolnir",
+			"multineedler",
+			"breachpod",
+			"sabotpod",
+			"phasecl",
+			"cyclone",
+			"hurricane",
+			"squall",
+			"locust",
+			"pdburst",
+			"amblaster",
+			"phasebeam",
+			"heavyblaster",
+			"heavyburst",
+			"ionpulser",
+			"ionbeam",
+			"plasma",
+			"guardian",
+			"tachyonlance",
+		],
+	},
+	"priorityWeapons":{
+		"tags":[],
+		"weapons":[
+		],
+	},
+	"knownHullMods":{
+		"tags":["base_bp", "remnant"],
+		"hullMods":[
+			"advancedshieldemitter", # accelerated
+			"advancedoptics",
+			"turretgyros",
+			"armoredweapons",
+			"augmentedengines",
+			"autorepair",
+			"converted_hangar",
+			"eccm",
+			"ecm",
+			"expanded_deck_crew",
+			"magazines",
+			"missleracks",
+			"extendedshieldemitter",
+			"frontemitter",
+			"frontshield",  # makeshift
+			"hardenedshieldemitter",
+			"heavyarmor",
+			"insulatedengine",
+			"pointdefenseai",
+			"targetingunit",
+			"nav_relay",
+			"adaptiveshields", # omni
+			"operations_center",
+			"recovery_shuttles",
+			"fluxbreakers",
+			"solar_shielding",
+			"stabilizedshieldemitter",
+			"surveying_equipment",
+		],
+	},
+
+	# --- Economy flavor (§5) — intentionally ABSENT --------------------------
+	# No weaponSellFrequency / fighterSellFrequency / hullmodSellFrequency:
+	# Omicron is marketless by ratified design (EXILES_OMICRON_ASSET_MODEL.md §1).
+	# Nothing is ever offered for sale. Same reason illegalCommodities is empty:
+	# a machine that runs no markets polices no trade.
+	"illegalCommodities":[
+	],
+
+	# --- Doctrine (vanilla Remnant baseline — proven for automated fleets) ---
+	"factionDoctrine":{
+		"warships":4,
+		"carriers":2,
+		"phaseShips":1,
+
+		"officerQuality":5,		# AI cores — elite by definition
+		"shipQuality":3,
+		"numShips":1,
+
+		"shipSize":4,
+
+		"aggression":3, # doesn't matter since automated ships are super aggressive regardless
+
+		"combatFreighterProbability":0,
+		"combatFreighterCombatUseFraction":1,
+		"combatFreighterCombatUseFractionWhenPriority":1,
+		"autofitRandomizeProbability":0.25,
+
+		"commanderSkillsShuffleProbability":1,
+		"commanderSkills":[
+			"flux_regulation",
+			"coordinated_maneuvers",
+		],
+	},
+
+	# LOAD-BEARING: home-system Nexus / Under-Construction Nexus station fleets
+	# resolve through this role (remnant_station2 Standard/Damaged — see
+	# ExileOmicron0.java + OmicronDefenseFleetManager).
+	"shipRoles":{
+		"remnantStation1":{
+			"remnant_station2_Damaged":10,
+			"remnant_station2_Standard":10,
+		},
+	},
+
+	# --- A/V ------------------------------------------------------------------
+	"music":{
+		# Tri-Tachyon tracks = the failsafe's parentage. Neutral track added because
+		# the player IS neutral to Omicron (§4a) — most encounters are non-hostile.
+		"encounter_neutral":"music_tritach_encounter_neutral",
+		"encounter_hostile":"music_tritach_encounter_hostile",
+	},
+	# No "voices" block on purpose: the machine does not make small talk.
+	# Comm traffic is handled by the AI-core officer personas the engine provides.
+	"portraits":{
+		# vanilla AI-core portraits, verified on disk
+		"standard_male":[
+			"graphics/portraits/portrait_ai1b.png",
+			"graphics/portraits/portrait_ai2b.png",
+			"graphics/portraits/portrait_ai3b.png",
+		],
+		"standard_female":[
+			"graphics/portraits/portrait_ai1b.png",
+			"graphics/portraits/portrait_ai2b.png",
+			"graphics/portraits/portrait_ai3b.png",
+		],
+	},
+
+	# --- Machine-flavored ranks/posts (§5) ------------------------------------
+	# NOTE: these rarely surface in normal play — AI-core captains carry their own
+	# titles and there are no markets to staff. They exist so any scripted contact,
+	# comm dialog, or Phase-2 quest NPC ("why does Omicron attack the Church?")
+	# inherits classification-flavored language for free. Naming rule: everything
+	# is a process/node — bureaucratic-neutral, never menacing (no-malice guardrail).
+	"ranks":{
+		"ranks":{
+			"spaceCommander":{"name":"Tactical Coordinator"},
+		},
+		"posts":{
+			"patrolCommander":{"name":"Interdiction Process"},
+			"fleetCommander":{"name":"Command Node"},
+			"baseCommander":{"name":"Nexus Kernel"},
+			"administrator":{"name":"Allocation Process"},
+			"genericMilitary":{"name":"Combat Process"},
+			"portmaster":{"name":"Docking Arbiter"},
+			"quartermaster":{"name":"Logistics Process"},
+			"supplyOfficer":{"name":"Logistics Process"},
+		},
+	},
+
+	"custom":{
+		"engageWhenEvenStrength":true,
+		"allowsTransponderOffTrade":true, # to prevent cargoscan dialog from "patrols"
+		"postsNoBounties":true,
+		# Preserved from the live file (added during the gauntlet pass; not in
+		# vanilla remnants.faction). OPEN QUESTION: confirm pirateBehavior is still
+		# wanted now that guard hostility is scripted in OmicronDefenseFleetManager —
+		# it also exempts attacks on Omicron from some reputation machinery, which
+		# may fight the §4a "engaging costs reputation" intent.
+		"pirateBehavior":true,
+		"fightToTheLast":true, # machines do not rout; order a full assault instead of retreating
+		"simulatorData":{
+			"showInSimulator":true,
+			"standardAICores":true,
+			"includeCivShipsWithFaction":true,
+		},
+	},
+
+	"fleetTypeNames":{
+		"patrolSmall":"Fragment",
+		"patrolMedium":"Sub-Ordo",	# was "Sub-Ordo Raider" — home-defense patrols aren't raiding; OPEN QUESTION if the rename was deliberate
+		"patrolLarge":"Ordo",
+		"battlestation":"Nexus",		# LOAD-BEARING flavor: matches the asset-model doc's facility naming
+		"taskForce":"Directive",		# director raid fleets — a task with a classification, not a war party
+	},
+},

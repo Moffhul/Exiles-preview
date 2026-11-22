@@ -1,0 +1,10 @@
+{
+    "id": "Exiles",
+    "name": "Exiles",
+    "author": "MoffHul11",
+    "version": "0.1",
+    "description": "Custom Start mod",
+    "gameVersion": "0.98.5a-RC5",
+    "jars": ["jars/ExilesRuleCommands.jar"],
+    "modPlugin": "data.scripts.exiles.ExilesModPlugin"
+}

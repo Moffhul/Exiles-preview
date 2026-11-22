@@ -1,0 +1,47 @@
+{
+    "displayName": "Custom",
+    "fluxCapacitors": 10,
+    "fluxVents": 10,
+    "hullId": "wolf_exile",
+    "hullMods": [
+        "reinforcedhull",
+        "fluxdistributor"
+    ],
+    "permaMods": [
+		"comp_armor",
+		"glitched_sensors",
+		"increased_maintenance",
+		"damaged_mounts",
+		"erratic_injector"
+	],
+    "sMods": [],
+    "variantId": "wolf_exile_Starting",
+    "weaponGroups": [
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {"WS 004": "pulselaser"}
+        },
+        {
+            "autofire": false,
+            "mode": "ALTERNATING",
+            "weapons": {
+                "WS 005": "swarmer",
+                "WS 006": "swarmer"
+            }
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {"WS 001": "irpulse"}
+        },
+        {
+            "autofire": true,
+            "mode": "LINKED",
+            "weapons": {
+                "WS 002": "pdlaser",
+                "WS 003": "pdlaser"
+            }
+        }
+    ]
+}

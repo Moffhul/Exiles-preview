@@ -1,0 +1,13 @@
+{
+	# Ashen Crusade under Nexerelin (docs/EXILES_NEXERELIN_COMPAT.md §3.2): protect the
+	# scripted relations; keep Nex hands-off their war-making (Exiles director drives it).
+	"playableFaction":false,       # revisit at Phase 1 (clean upgrade path to full Nex actor)
+	"startingFaction":false,
+	"corvusCompatible":true,
+	"noRandomizeRelations":true,
+	"noSyncRelations":true,
+	# The Church opposes their METHODS, not their faith (CLAUDE.md §3): Church<->Ashen can be
+	# tense but never open war — same trick Nex itself uses for luddic_path<->luddic_church.
+	"minRelationships":{ "luddic_church":-0.49 },
+	"specialForcesMaxFleets":0,
+}

@@ -1,0 +1,392 @@
+# exilemidan.faction — MIDAN PROPER after the ratified 2026-07-07 Midan/Black Fleet split.
+# The pirate identity that used to live here (displayName "Black Fleet", makesPirateBases,
+# pirate roster) was PROMOTED to exileblackfleet.faction. What remains below is Midan the
+# shadowy manipulators. Identity remains minimally re-labeled, while the fleet block is an
+# EXPERIMENTAL Persean League transplant (author-approved 2026-07-12) used to observe what
+# kind of task force that roster produces before designing the final small elite Midan fleet:
+#   - displayName Black Fleet -> Midan; makesPirateBases + pirateBaseStationTypes migrated out.
+#   - Fleet-selection/doctrine fields are copied from vanilla persean_league.faction.
+#   - Colors, ranks, portraits, music, custom behavior, and faction identity remain Midan's
+#     stopgap content. This League-derived roster is TEST MATERIAL, not a lore ruling.
+{
+	"id":"exilemidan",
+	"color":[255,0,0,255],
+
+	"baseUIColor":[200,0,0,255],
+	"darkUIColor":[85,0,0,175],
+	"gridUIColor":[255,0,0,75],
+	"brightUIColor":[231,98,103,255],
+
+	"entityNamePrefix":"cyndic",
+	"personNamePrefix":"zero",
+	"displayName":"Midan",
+	"displayNameWithArticle":"the Midan",
+	"displayNameIsOrAre":"are",
+	"logo":"graphics/factions/lowtech.png",
+	"crest":"graphics/factions/crest_lowtech.png",
+	"shipNamePrefix":"",
+	"shipNameSources":{
+		"PIRATES":1,
+		"AZTEC":1,
+		"BEASTS":1,
+		"NORSE":1,
+		"CELTIC":1,
+		"SPACE":1,
+		"GENERAL":1,
+	},
+	"names":{
+		"fringe":1,
+		"modern":1,
+		"world":1,
+		"future":1,
+		"myth":1,
+		"old english":1,
+		"pirate":1,
+	},
+	# EXPERIMENT 2026-07-12: fleet-generation block copied from vanilla Persean League.
+	# Preserve until the Jangala task-force observation is complete, then design the final
+	# Midan roster from the result rather than silently treating this as finished content.
+	"variantOverrides":{
+		"monitor_Escort":10,
+		"vigilance_Support1":5,
+		"vigilance_Support2":5,
+		"brawler_Support":5,
+
+		"hammerhead_DEM":10,
+		"sunder_Support":10,
+		"drover_Support":10,
+
+		"eagle_Support":10,
+		"falcon_Escort":10,
+		"champion_DEMEscort":3,
+		"champion_Strike":7,
+		"gryphon_DEM":10,
+
+		"conquest_DEM":10,
+		"pegasus_Strike":5,
+		"pegasus_Balanced":5,
+
+		"heron_Attack1":5,
+		"heron_Attack2":5,
+	},
+	# multiplier for how often hulls show up in the faction's fleets
+	"hullFrequency":{
+		"tags":{
+		},
+		"hulls":{
+			"sunder":0.5,
+			"falcon":0.5,
+			"monitor":0.5,
+		},
+	},
+	# ships the faction gets access to when importing S&W out-of-faction
+	# defaults to same as knownShips when empty
+	"shipsWhenImporting":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownShips":{
+		"tags":["persean"],
+		"hulls":[
+			"crig",
+			"ox",
+			"dram",
+			"phaeton",
+			"prometheus",
+			"gemini",
+			"atlas",
+			"mercury",
+			"hermes",
+			"kite_original",
+			"mudskipper",
+			"wayfarer",
+			"nebula",
+			"valkyrie",
+			"starliner",
+			"buffalo",
+			"colossus",
+
+			"vigilance",
+			"brawler",
+			"monitor",
+
+			"hammerhead",
+			"sunder",
+			"drover",
+
+			"heron",
+			"falcon",
+			"eagle",
+			"champion",
+			"gryphon",
+
+			"conquest",
+			"pegasus",
+		],
+	},
+	# listing ships here will make the faction mostly use them even if other hulls become available
+	"priorityShips":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownFighters":{
+		"tags":["persean"],
+		"fighters":[
+			"thunder_wing",
+			"gladius_wing",
+			"talon_wing",
+			"claw_wing",
+		],
+	},
+	"priorityFighters":{
+		"tags":[],
+		"fighters":[
+		],
+	},
+	"knownWeapons":{
+		"tags":["persean"],
+		"weapons":[
+			"gorgon",
+			"gorgonpod",
+			"gazer",
+			"gazerpod",
+			"dragon",
+			"dragonpod",
+			"hydra",
+
+			"lightmg",
+			"lightdualmg",
+			"lightac",
+			"lightdualac",
+			"lightag",
+
+			"heavymg",
+			"flak",
+			"heavymauler",
+			"heavyac",
+
+			"mjolnir",
+
+			"pdburst",
+			"pdlaser",
+			"lrpdlaser",
+			"taclaser",
+			"ioncannon",
+
+			"phasebeam",
+			"gravitonbeam",
+			"irautolance",
+			"heavyburst",
+			"ionbeam",
+
+			"guardian",
+			"hil",
+		],
+	},
+	"priorityWeapons":{
+		"tags":[],
+		"weapons":[
+		],
+	},
+	"knownHullMods":{
+		"tags":["standard", "persean"],
+		"hullMods":[
+		],
+	},
+	"shipSellFrequency":{
+		"heron":100,
+	},
+	"weaponSellFrequency":{
+		"gorgon":10,
+		"gorgonpod":10,
+		"gazer":10,
+		"gazerpod":10,
+		"dragon":10,
+		"dragonpod":10,
+		"hydra":10,
+		"irautolance":10,
+		"heavyac":10,
+		"mjolnir":10,
+		"guardian":5,
+		"hil":5,
+		"pdburst":5,
+		"heavyburst":5,
+	},
+	"fighterSellFrequency":{
+	},
+	"hullmodSellFrequency":{
+		"missleracks":10,
+		"eccm":10,
+		"missile_autoloader":5,
+	},
+	"factionDoctrine":{
+		"warships":5,
+		"carriers":1,
+		"phaseShips":0,
+		
+		"officerQuality":3,
+		"shipQuality":2,
+		"numShips":2,
+		
+		"shipSize":3,
+		
+		"aggression":2,
+		
+		"combatFreighterProbability":0.5,
+		"combatFreighterCombatUseFraction":0,
+		"combatFreighterCombatUseFractionWhenPriority":1,
+		"autofitRandomizeProbability":0.25,
+
+		"officerSkillsShuffleProbability":0f,
+		"officerSkills":[
+			"missile_specialization",
+		],
+
+		"commanderSkillsShuffleProbability":1,
+		"commanderSkills":[
+			"crew_training",
+			"officer_training",
+			"coordinated_maneuvers",
+			"electronic_warfare",
+		],
+	},
+	"illegalCommodities":[
+	],
+	"music":{
+		"theme":"music_pirates_market_neutral",
+		"market_neutral":"music_pirates_market_neutral",
+		"market_hostile":"music_pirates_market_hostile",
+		"market_friendly":"music_pirates_market_friendly",
+		"encounter_neutral":"music_pirates_encounter_neutral",
+		"encounter_hostile":"music_pirates_encounter_hostile",
+		"encounter_friendly":"music_pirates_encounter_friendly",
+	},
+	"portraits":{
+		"standard_male":[
+			"graphics/portraits/portrait_pirate02.png",
+			"graphics/portraits/portrait_pirate03.png",
+			"graphics/portraits/portrait_pirate07.png",
+			"graphics/portraits/portrait_pirate10.png",
+			"graphics/portraits/portrait_pirate11.png",
+			
+			"graphics/portraits/portrait_pirate12.png",
+			"graphics/portraits/portrait_pirate13.png",
+			"graphics/portraits/portrait_pirate14.png",
+			"graphics/portraits/portrait_pirate15.png",
+			"graphics/portraits/portrait_pirate19.png",
+			
+			"graphics/portraits/portrait_pirate20.png",
+			
+			
+			"graphics/portraits/portrait_mercenary01.png",
+			"graphics/portraits/portrait_mercenary03.png",
+			
+			"graphics/portraits/portrait_mercenary04.png",
+			"graphics/portraits/portrait_mercenary06.png",	
+			"graphics/portraits/portrait18.png",
+			"graphics/portraits/portrait20.png",
+			"graphics/portraits/portrait33.png",
+			"graphics/portraits/portrait36.png",
+			"graphics/portraits/portrait40.png",
+		],
+		"standard_female":[
+			"graphics/portraits/portrait_pirate01.png",
+			"graphics/portraits/portrait_pirate04.png",
+			"graphics/portraits/portrait_pirate05.png",
+			"graphics/portraits/portrait_pirate06.png",
+			"graphics/portraits/portrait_pirate08.png",
+			
+			"graphics/portraits/portrait_pirate09.png",
+			"graphics/portraits/portrait_pirate16.png",
+			"graphics/portraits/portrait_pirate17.png",
+			"graphics/portraits/portrait_pirate18.png",
+			"graphics/portraits/portrait_pirate21.png",
+			"graphics/portraits/portrait_pirate22.png",
+			
+			"graphics/portraits/portrait_mercenary02.png",
+			"graphics/portraits/portrait_mercenary05.png",
+			"graphics/portraits/portrait_mercenary07.png",
+			"graphics/portraits/portrait_mercenary08.png",
+
+			"graphics/portraits/portrait29.png",
+			"graphics/portraits/portrait37.png",
+			"graphics/portraits/portrait39.png",
+			"graphics/portraits/portrait42.png",
+
+		],
+	},
+	"ranks":{
+		"ranks":{
+			"spaceCommander":{"name":"Captain"},
+		},
+		"posts":{
+			"patrolCommander":{"name":"Captain"},
+			"fleetCommander":{"name":"Fleet Master"},
+			"baseCommander":{"name":"Warboss"},
+			"stationCommander":{"name":"Station King"},
+			"portmaster":{"name":"Portboss"},
+			"administrator":{"name":"Boss"},
+		},
+	},
+	"voices":{
+		"LOW":{
+			"soldier":3,
+			"spacer":10,
+		},
+		"MEDIUM":{
+			"soldier":5,
+			"spacer":10,
+		},
+		"HIGH":{
+			"soldier":5,
+			"spacer":10,
+			"villain":10,
+		},
+	},	
+	"custom":{
+		"decentralized":true, # prevents faction from offering Security Code and Combat Bounty missions
+		"engageWhenEvenStrength":true,
+		"exemptFromFoodShortages":true,
+		"willTradeWhenHostile":false,
+		#"noPatrols":false, # no longer supported; if has patrol HQ/military base/etc, will have patrols
+		"ignoreTradeWithEnemiesForReputation":true,
+		"postsNoBounties":true,
+		"offerMissionsWhenHostile":false,
+		"allowsTransponderOffTrade":false,
+		"patrolsHaveNoPatrolMemoryKey":true,
+		# "pirateBehavior":true, # for fleet behavior
+		# makesPirateBases + pirateBaseStationTypes MIGRATED to exileblackfleet 2026-07-07
+		# (ratified split: forward supply bases are Black Fleet content; Midan runs no rabble).
+		"fightToTheLast":true, # order a full assault instead of retreating, in most cases
+		"hostilityImpactOnGrowth":true,
+		"punitiveExpeditionData":{
+			"vsCompetitors":false,
+			"vsFreePort":true,
+			"canBombard":true,
+			"territorial":true,
+		},
+		"simulatorData":{
+			"showInSimulator":true,
+		},
+	},
+	"fleetTypeNames":{
+		"smallTrader":"Trade Convoy",
+		"trade":"Trade Convoy",
+		"tradeLiner":"Passenger Convoy",
+		"patrolSmall":"Corsair",
+		"patrolMedium":"Raiders",
+		"patrolLarge":"Armada",
+		"mercScout":"Scout",
+		"mercBountyHunter":"Raiders",
+		"mercPrivateer":"Raiders",
+		"mercPatrol":"Attack Fleet",
+		"mercArmada":"Armada",
+		"taskForce":"Revenge Fleet",
+	},
+}
+
+
+
+

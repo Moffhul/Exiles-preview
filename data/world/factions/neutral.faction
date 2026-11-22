@@ -1,0 +1,11 @@
+{
+	"portraits":{
+		"standard_male":[
+			"graphics/portraits/characters/khuttie.png",
+			"graphics/portraits/characters/zhang.png",
+		],
+		"standard_female":[
+			"graphics/portraits/characters/faraday.png",
+		],
+	},
+},

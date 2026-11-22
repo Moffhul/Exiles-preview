@@ -1,0 +1,16 @@
+{
+    "displayName": "Standard",
+    "fluxCapacitors": 20,
+    "fluxVents": 8,
+    "goalVariant": true,
+    "hullId": "exile_tarsus_2",
+    "hullMods": [],
+    "permaMods": [],
+    "quality": 0.5,
+    "variantId": "exile_tarsus_2_Standard",
+    "weaponGroups": [{
+        "autofire": true,
+        "mode": "LINKED",
+        "weapons": {"WS 001": "lightmg", "WS 002": "lightmg", "WS 003": "lightmg"}
+    }]
+}

@@ -1,0 +1,22 @@
+{
+	# Pass 7 (2026-10-24 ruling): Midan-built Omens for the Strike Force. Midan builds Omens from a
+	# blueprint acquired during Wiggin's career; a non-League hull in a "League" fleet is a
+	# deliberate "something is off" clue. The sprite is a PLACEHOLDER copy of vanilla's Omen, at an
+	# Exiles path (never vanilla's path, which would recolour every Omen in the Sector); the planned
+	# midline-green recolour is a file swap.
+	"baseHullId":"omen",
+	"skinHullId":"exile_omen",
+	"hullName":"Omen",
+	"descriptionId":"omen",
+	# Skin tags REPLACE the base hull's (vanilla precedent: brawler_LG.skin), so this drops the
+	# Omen's rare_bp / merc / ind: no faction knows the hull, no market sells it, no raid drops
+	# its blueprint. Only the explicit Strike Force variant list ever fields it.
+	"tags":["no_dealer","no_bp_drop"],
+	"spriteName":"graphics/ships/omen/omen.png",
+	"removeWeaponSlots":[],
+	"removeEngineSlots":[],
+	"removeBuiltInMods":[],
+	"removeBuiltInWeapons":[],
+	"builtInWeapons":{
+	},
+}

@@ -1,0 +1,9 @@
+faction
+# case sensitive!!! registers Exiles factions with Nexerelin so it loads their
+# <id>.json config (otherwise they fall back to the neutral default = playableFaction:false,
+# which makes the faction census skip them: no diplomacy profile, hidden in the Factions tab).
+exilerefugee
+exilemidan
+exileblackfleet
+exileomicron
+exileashencrusade

@@ -1,0 +1,394 @@
+{
+	"id":"exileashencrusade",
+	"color":[30,80,0,255],
+	
+	"baseUIColor":[75,200,0,255],
+	"darkUIColor":[32,85,0,175],
+	"gridUIColor":[95,255,0,75],
+	
+	"displayName":"Ashen Crusade",
+	"displayNameWithArticle":"the Ashen Crusade",
+	"showInIntelTab":true,
+	"logo":"graphics/factions/exile_ashen_crusade.png",
+	"crest":"graphics/factions/crest_exile_ashen_crusade.png",
+	"shipNamePrefix":"KGS",
+	"shipNameSources":{
+		"LUDDIC_CHURCH":1,
+		"ABRAHAMIC":1,
+	},
+	"names":{
+		"fringe":1,
+		"modern":1,
+		"world":1,
+		"future":1,
+		"luddic":2,
+	},
+	# variantOverrides restricts hulls to listed variants and adjusts their probability
+	"variantOverrides":{
+		"vanguard_Outdated":5,
+		"vanguard_Outdated2":5,
+
+		"manticore_Balanced":5,
+		"manticore_Outdated":5,
+
+		"eradicator_Outdated":4,
+		"eradicator_Outdated2":3,
+		"eradicator_Fighter_Support":3,
+
+		# Luddic Path blend (CLAUDE.md §4 roster cleanup, 2026-07-07): the ships the
+		# Path faithful brought when they joined the Crusade. Variant hull ids verified:
+		# lasher_luddic_path_Raider -> hullId lasher_pather; prometheus2_Standard -> prometheus2.
+		"lasher_luddic_path_Raider":5,
+		"prometheus2_Standard":5,
+	},
+	# multiplier for how often hulls show up in the faction's fleets
+	"hullFrequency":{
+		"tags":{
+			# Path ships are the minority flavor in a Church-dominant fleet
+			# (§3: "blend Luddic Church and Luddic Path ships" — blend, not takeover).
+			"LP_bp":0.7,
+		},
+		"hulls":{
+			#"dominator":0.2, # fewer of those, mostly eradicators - no more Dominators, actually
+		},
+	},
+	# ships the faction gets access to when importing S&W out-of-faction
+	"shipsWhenImporting":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	# LP_bp added 2026-07-07 (CLAUDE.md §4 cleanup): pulls the vanilla Path-skin family
+	# (brawler_pather, cerberus/hound/kite/gremlin/lasher _luddic_path, venture_pather,
+	# colossus2) — the hulls Path members brought into the Crusade.
+	"knownShips":{
+		"tags":["luddic_church", "LC_bp", "LP_bp"],
+		"hulls":[
+		"crig",
+			"cerberus",
+			"crig",
+			"ox",
+			"dram",
+			"phaeton",
+			"prometheus",
+			"shepherd",
+			"mule",
+			"venture",
+			"atlas",
+			"hermes",
+			"mudskipper",
+			"nebula",
+			"starliner",
+			"tarsus",
+			"colossus",
+
+			"vanguard",
+
+			"buffalo2",
+			"manticore",
+			"condor",
+
+			"eradicator",
+			"mora",
+
+			"retribution",
+			"invictus",
+
+			# LP Prometheus warship conversion (pre-approved add; not LP_bp-tagged in
+			# ship_data.csv, so it must be listed explicitly).
+			"prometheus2",
+		],
+	},
+	# listing ships here will make the faction mostly use them even if other hulls become available
+	"priorityShips":{
+		"tags":[],
+		"hulls":[
+		],
+	},
+	"knownFighters":{
+		"tags":["luddic_church"],
+		"fighters":[
+			"broadsword_wing",
+			"perdition_wing",
+			"talon_wing",
+		],
+	},
+	"priorityFighters":{
+		"tags":[],
+		"fighters":[
+			"broadsword_wing",
+			"perdition_wing",
+			"talon_wing",
+		],
+	},
+	"knownWeapons":{
+		"tags":["luddic_church"],
+		"weapons":[
+			"lightmg",
+			"lightdualmg",
+			"lightmortar",
+			"vulcan",
+			"lightac",
+			"lightdualac",
+
+			"shredder",
+			"heavymortar",
+			"flak",
+			"arbalest",
+
+			"mark9",
+			"hellbore",
+			"devastator",
+
+			"hammer",
+			"hammer_single",
+			"swarmer",
+			"annihilator",
+			"harpoon",
+			"harpoon_single",
+			"breach",
+			"sabot",
+			"sabot_single",
+
+			"jackhammer",
+			"harpoonpod",
+			"sabotpod",
+			"breachpod",
+			"salamanderpod",
+			"annihilatorpod",
+			"pilum",
+
+			"pilum_large",
+			"hurricane",
+			"hammerrack",
+
+			"mininglaser",
+			"miningblaster",
+		],
+	},
+	"priorityWeapons":{
+		"tags":[],
+		"weapons":[
+		],
+	},
+	"knownHullMods":{
+		"tags":["standard", "luddic_church"],
+		"hullMods":[
+	   		"turretgyros",
+    		"armoredweapons",
+    		"auxiliarythrusters",
+    		"blast_doors",
+    		"dedicated_targeting_core",
+    		"magazines",
+    		"missleracks",
+    		"hardened_subsystems",
+    		"insulatedengine",
+    		"pointdefenseai",
+    		"reinforcedhull",
+    		"unstable_injector",
+    	],
+	},
+	"weaponSellFrequency":{
+		"lightmg":5,
+		"lightdualmg":5,
+		"lightmortar":5,
+		"vulcan":5,
+		"lightac":5,
+		"lightdualac":5,
+
+		"shredder":5,
+		"heavymortar":5,
+		"flak":5,
+		"arbalest":5,
+
+		"mark9":10,
+		"hellbore":10,
+		"devastator":5,
+
+		"hammer":5,
+		"hammer_single":5,
+		"annihilator":5,
+		"breach":5,
+
+		"jackhammer":10,
+		"breachpod":10,
+		"annihilatorpod":10,
+		"pilum":10,
+
+		"pilum_large":10,
+		"hurricane":10,
+		"hammerrack":10,
+	},
+	"fighterSellFrequency":{
+		"perdition_wing":5,
+	},
+	"hullmodSellFrequency":{
+		"heavyarmor":10,
+		"ballistic_rangefinder":10,
+		"converted_hangar":10,
+	},
+		"factionDoctrine":{
+    		"warships":5,
+    		"carriers":1,
+    		"phaseShips":1,
+
+    		"officerQuality":3,
+    		"shipQuality":3,
+    		"numShips":5,
+
+    		"shipSize":3,
+
+    		"aggression":4,
+
+    		"combatFreighterProbability":0.75,
+    		"combatFreighterCombatUseFraction":1,
+    		"combatFreighterCombatUseFractionWhenPriority":1,
+    		"autofitRandomizeProbability":0.75,
+
+    		"commanderSkillsShuffleProbability":0,
+    		"commanderSkills":[
+    			"crew_training",
+    			"coordinated_maneuvers"
+    		],
+       },
+	"shipRoles":{
+		"carrierSmall":{
+			"includeDefault":true,
+			"condor_Strike":50,
+		},
+		"carrierMedium":{
+			"includeDefault":true,
+			#"mora_Strike":50,
+			"mora_Torpedo":50,
+		},
+		"combatMedium":{
+			"includeDefault":true,
+			"buffalo2_Fighter_Support":10,
+		},
+		"combatFreighterMedium":{
+			"includeDefault":true,
+			"mule_Fighter_Support":10,
+		},
+	},
+	"illegalCommodities":[
+		"drugs",
+		"organs",
+		"luxury_goods",
+		"ai_cores",
+	],
+	"music":{
+		"theme":"music_luddite_market_neutral",
+		"market_neutral":"music_luddite_market_neutral",
+		"market_hostile":"music_luddite_market_hostile",
+		"market_friendly":"music_luddite_market_friendly",
+		"encounter_neutral":"music_luddite_encounter_neutral",
+		"encounter_hostile":"music_luddite_encounter_hostile",
+		"encounter_friendly":"music_luddite_encounter_friendly",
+	},
+
+	"voices":{
+		"LOW":{
+			"soldier":10,
+			"faithful":10,
+			"pather":10,
+		},
+		"MEDIUM":{
+			"soldier":10,
+			"faithful":10,
+		},
+		"HIGH":{
+			"soldier":10,
+			"faithful":10,
+		},
+	},
+
+	"portraits":{
+		"standard_male":[
+			"graphics/portraits/portrait_luddic00.png",
+			"graphics/portraits/portrait_luddic02.png",
+			"graphics/portraits/portrait_luddic04.png",
+			"graphics/portraits/portrait_luddic05.png",
+			"graphics/portraits/portrait_luddic06.png",
+			"graphics/portraits/portrait_luddic09.png",
+			"graphics/portraits/portrait_mercenary01.png",
+			"graphics/portraits/portrait_mercenary03.png",
+			"graphics/portraits/portrait12.png",
+			"graphics/portraits/portrait15.png",
+			"graphics/portraits/portrait17.png",
+			"graphics/portraits/portrait18.png",
+			"graphics/portraits/portrait20.png",
+			"graphics/portraits/portrait_luddic00.png",
+		],
+		"standard_female":[
+			"graphics/portraits/portrait_luddic01.png",
+			"graphics/portraits/portrait_luddic03.png",
+			"graphics/portraits/portrait_luddic07.png",
+			"graphics/portraits/portrait_luddic08.png",
+			"graphics/portraits/portrait_luddic10.png",
+			"graphics/portraits/portrait_luddic11.png",
+			"graphics/portraits/portrait16.png",
+			"graphics/portraits/portrait27.png",
+			"graphics/portraits/portrait28.png",
+			"graphics/portraits/portrait29.png",
+		],
+	},
+
+	"ranks":{
+		"ranks":{
+			"spaceCommander":{"name":"Deacon-Captain"},
+		},
+		"posts":{
+			"patrolCommander":{"name":"Deacon-Captain"},
+			"fleetCommander":{"name":"Curate-Commander"},
+			"baseCommander":{"name":"Bishop-Governor"},
+			"administrator":{"name":"Sub-presbyter Orbis"},
+			"genericMilitary":{"name":"Knight-Commander"},
+			"portmaster":{"name":"Portwatcher"},
+			"quartermaster":{"name":"Purser"},
+		},
+	},
+
+		"custom":{
+    		"decentralized":true, # prevents faction from offering Security Code and Combat Bounty missions
+    		"engageWhenEvenStrength":true,
+    		"exemptFromFoodShortages":true,
+    		"willTradeWhenHostile":false,
+    	    "ignoreTradeWithEnemiesForReputation":true,
+    		"postsNoBounties":true,
+    		"offerMissionsWhenHostile":false,
+    		"allowsTransponderOffTrade":false,
+    		"patrolsHaveNoPatrolMemoryKey":true,
+    		"pirateBehavior":true,
+#    		"makesPirateBases":true,
+#    		"fightToTheLast":true, # order a full assault instead of retreating, in most cases
+    		"hostilityImpactOnGrowth":true,
+#    		"pirateBaseStationTypes":{
+#    			"orbitalstation":10,
+    		#	"orbitalstation_mid":6,
+    		#	"orbitalstation_high":2,
+#    		},
+    		"punitiveExpeditionData":{
+    			"vsCompetitors":false,
+    			"vsFreePort":true,
+    			"canBombard":true,
+    			"territorial":true,
+    		},
+    		"simulatorData":{
+    			"showInSimulator":true,
+    		},
+    	},
+    	"fleetTypeNames":{
+    		"smallTrader":"Trade Convoy",
+    		"trade":"Trade Convoy",
+    		"tradeLiner":"Passenger Convoy",
+    		"patrolSmall":"Lance",
+    		"patrolMedium":"Fury",
+    		"patrolLarge":"Armada",
+    		"mercScout":"Scout",
+    		"mercBountyHunter":"Raiders",
+    		"mercPrivateer":"Raiders",
+    		"mercPatrol":"Attack Fleet",
+    		"mercArmada":"Armada",
+    		"taskForce":"Crusade",
+    	},
+},

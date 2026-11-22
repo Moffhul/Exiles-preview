@@ -1,0 +1,18 @@
+{
+	# Black Fleet under Nexerelin (created 2026-07-07 with the Midan/Black Fleet split; same
+	# pin-the-guardrails philosophy as exilemidan.json — see docs/EXILES_NEXERELIN_COMPAT.md).
+	# Deliberately NOT pirateFaction:true (compat audit finding #15: drags in Nex pirate
+	# morality/invasion semantics; the Black Fleet's raiding runs through the Exiles director,
+	# not Nex aggression — revisit at Phase 1 if Nex-driven raiding is ever wanted).
+	"playableFaction":false,
+	"startingFaction":false,
+	"corvusCompatible":true,
+	"disableDiplomacy":true,       # no ceasefires; the Core cannot negotiate with Mourad
+	"noRandomizeRelations":true,
+	"noSyncRelations":true,
+	# Hard cap vs everyone EXCEPT Midan: the alliance is permanent in both directions
+	# (paired with the floor below; VERIFY both keys against the Nex version on next compat audit).
+	"maxRelationships":{ "default":-0.5, "exilemidan":1 },
+	"minRelationships":{ "exilemidan":0.5 },
+	"specialForcesMaxFleets":0,
+}

@@ -1,0 +1,4 @@
+name,id,demand class,base price,export value,price variability,utility,origin,tags,stack size,cargo space,icon,sound id,sound id drop,order,economyTier,econUnitOrigUnused,econUnit,baseRaidDanger,eU * base value,iconWidthMult,plugin,desc
+Executor Core,exiles_omicron_core_1,ai_cores,,,0,5,,"nonecon, ai_core, no_loss_from_combat, codex_unlockable",1000,1,graphics/icons/cargo/ai_core_omicron_1.png,ai_core_pickup,ui_gamma_core_drop,42,,,,MEDIUM,,1,,
+Control Core,exiles_omicron_core_2,ai_cores,,,0,25,,"nonecon, ai_core, no_loss_from_combat, codex_unlockable",1000,1,graphics/icons/cargo/ai_core_omicron_2.png,ai_core_pickup,ui_beta_core_drop,43,,,,MEDIUM,,1,,
+Command Core,exiles_omicron_core_3,ai_cores,,,0,100,,"nonecon, ai_core, no_loss_from_combat, codex_unlockable",1000,1,graphics/icons/cargo/ai_core_omicron_3.png,ai_core_pickup,ui_alpha_core_drop,44,,,,HIGH,,1,,

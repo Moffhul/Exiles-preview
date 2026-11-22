@@ -1,0 +1,22 @@
+{
+  "starSystem":"lundy",
+  "markets":[
+    {
+      "entities":["exilebf_lundy_station"],
+      "faction":"exileblackfleet",
+      "size":3,
+      "freePort":true,
+      "startingConditions":[
+        "population_3"
+      ],
+      "industries":[
+        "population",
+        "spaceport",
+        "battlestation",
+        "militarybase",
+        "heavybatteries",
+        "exile_mysterious_stockpiles"
+      ]
+    }
+  ]
+}

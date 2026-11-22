@@ -1,0 +1,25 @@
+{
+	# Pass 7 (Sean, 2026-10-25): the Strike Force's logistics hull, brought up to military standard
+	# the way the Hegemony does it (vanilla buffalo_hegemony.skin): Militarized Subsystems BUILT IN,
+	# not S-modded (Midan would not spend an S-mod's effort on a logistics ship). Built-ins can only
+	# come from the hull (.ship or skin), never a .variant (decompiled HullVariantSpec: no such key;
+	# vanilla's Salvage Rig carries its gantry in constructionrig.ship the same way). It cancels
+	# Civilian-grade Hull's sensor penalties, so with the variant's normal Insulated Engine
+	# Assembly the hull's profile is 60 x 0.4 = 24 (was 36). Vanilla name and sprite (the sprite
+	# path is only READ); the clue is in the hullmod list.
+	"baseHullId":"phaeton",
+	"skinHullId":"exile_phaeton",
+	"hullName":"Phaeton",
+	"descriptionId":"phaeton",
+	# Skin tags REPLACE the base hull's (vanilla precedent: brawler_LG.skin): base_bp / merc / ind
+	# are dropped so no faction knows this hull and no market sells it.
+	"tags":["no_dealer","no_bp_drop"],
+	"spriteName":"graphics/ships/tanker_medium.png",
+	"removeWeaponSlots":[],
+	"removeEngineSlots":[],
+	"removeBuiltInMods":[],
+	"removeBuiltInWeapons":[],
+	"builtInMods":["militarized_subsystems"],
+	"builtInWeapons":{
+	},
+}

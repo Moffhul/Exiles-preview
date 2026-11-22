@@ -1,0 +1,2728 @@
+# Exiles Sector Destabilization Director — per-faction tuning.
+# Contract + field meanings: docs/war-capacity-design.md. Loose JSON: comments + trailing
+# commas are fine. Missing fields fall back to code defaults (OmicronDirectorConfig), so it is
+# safe to delete lines you don't want to override.
+#
+# To watch Omicron activity while testing, lower raid/incursion intervalMinDays + intervalMaxDays
+# (the legacy intervalDays key is overridden by them); readiness also gates cadence (OMI-10).
+{
+	# PLAYER OPTION: enabled pauses NEW fine installments; billed debt remains payable.
+	# Restart/reload to apply enabled. Terms below are saved at new game, never rewritten on load.
+	# Starting partial month is free. 1 = one full grace month, then bill at END of next month.
+	# Schedule totals 1,800,000 credits over 48 installments. No interest; early payoff via Intel.
+	"startingDebt": {
+		"enabled": true,
+		"gracePeriodMonths": 1,
+		"paymentSchedule": [
+			{"months": 6, "monthlyCredits": 10000},
+			{"months": 6, "monthlyCredits": 20000},
+			{"months": 12, "monthlyCredits": 35000},
+			{"months": 24, "monthlyCredits": 50000}
+		]
+	},
+
+	"exileomicron": {
+		# War-capacity nodes: one entry per Omicron star system (spread build 2026-07-06:
+		# the full far-west cluster). "uc": Lattice starts under construction, gains Mining
+		# and raid-source capability in stages, then becomes a full Nexus at completion.
+		"nodes": [
+			{"id": "omicron_prime",   "system": "Omicron"},
+			{"id": "omicron_cipher",  "system": "Cipher"},
+			{"id": "omicron_vigil",   "system": "Vigil"},
+			{"id": "omicron_lattice", "system": "Lattice", "uc": true},
+		],
+
+		"defaultTargetFactions": ["luddic_church", "luddic_path"],
+
+		# Operations are vanilla staged RaidIntel ops: assemble at a free Nexus -> travel ->
+		# act -> return. The two faction-wide request clocks never accumulate more than one
+		# pending request each; readiness and the global caps below decide whether one launches.
+		"raid": {
+			"intervalMinDays": 60,
+			"intervalMaxDays": 90,
+			"startFpMin": 70,
+			"startFpMax": 120,
+			"spawnFpMin": 200,       # fully mature, intact-Mining ceiling
+			"spawnFpMax": 360,
+			"maxActive": 2,       # legacy field; readiness.maxActive is authoritative
+			"enabled": true,   # campaign-start default; quests flip $exiles_omicron_raids_enabled at runtime
+		},
+
+		# Incursions: big budget -> includes capital-tier fleets; disrupt colony industries
+		# on arrival (survival-gated ON SCREEN; off screen vanilla autoresolves on strength -- OMI-4).
+		"incursion": {
+			"intervalMinDays": 180,
+			"intervalMaxDays": 270,
+			"startFpMin": 180,
+			"startFpMax": 300,
+			"spawnFpMin": 700,       # fully mature, intact-Mining ceiling
+			"spawnFpMax": 1100,
+			"maxActive": 1,       # legacy field; readiness.maxIncursions is authoritative
+			"enabled": true,   # set false for release when the enabling quest exists ($exiles_omicron_incursions_enabled)
+		},
+
+		# One faction-wide logistics pool. Incursions reserve new readiness once requested;
+		# disabling incursions clears that reservation and starts a fresh clock when re-enabled.
+		"readiness": {
+			"max": 2,
+			"perYear": 9,
+			"raidCost": 1,
+			"incursionCost": 2,
+			"failureFraction": 0.25,
+			"retryDays": 30,
+			"noEnemyRetryDays": 90,
+			"maxActive": 2,
+			"maxIncursions": 1,
+			"nexusNormalization": 4,
+			"fuelNormalization": 4,
+			"miningNormalization": 4,
+			"fuelBaseEfficiency": 0.20,
+		},
+
+		# Attack strength matures independently of Lattice construction and the corporate
+		# protection umbrella. The curve is progress^exponent over the named duration.
+		"combatMaturity": {
+			"miningBaseEfficiency": 0.20, # whole budget: 100/80/60/40/20% at 4/3/2/1/0 Mining
+			"days": 1080,
+			"exponent": 1.5,
+			"eventOverdriveCap": 1.10,
+		},
+
+		# Shared operation shape.
+		"operations": {
+			"abortFraction": 0.5,      # stage fails below this fraction of spawn FP (vanilla: 0.5)
+			"bountyPerFrigate": 3000,  # credits the RAIDED faction pays per frigate-equivalent killed; 0 disables
+			# Legacy collateral switch: 0 = strict target-faction discipline; any positive value
+			# lets non-exempt HOSTILE bystander colonies enter the fixed objective-budget draw.
+			# Retained as a number for config compatibility; it is no longer a probability.
+			"collateralChance": 0.5,
+			# Factions exempt from collateral by BALANCE. Empty: the two standing exemptions are
+			# canon, not tuning — player colonies (code; future quest-controlled crisis) and the
+			# Refugee faction (ExileProtectedFactions, ruling 2026-07-29). Clearing this list
+			# cannot expose either.
+			"collateralExempt": [],
+			# Feasibility: only target colonies whose defense estimate (system defenders +
+			# station) is <= op FP budget x this. Stops small raids from flinging themselves
+			# at fortress systems (e.g. Eos Exodus) and instantly failing. 0 disables.
+			"feasibilityMult": 1.25,
+		},
+
+		# Colony-disruption effect (deciv-safe caps; temporary setDisrupted cannot decivilize).
+		"disruption": {
+			"shortMinDays": 20,
+			"shortMaxDays": 30,
+			"longMinDays": 30,
+			"longMaxDays": 60,
+			"spaceportChance": 0.6,
+			"farmingChance": 0.6,
+			"otherChance": 0.5,
+		},
+
+		# Home-defense gauntlet: defender fleets per facility station (asset-model tier
+		# ladder: Nexus ~ Star-Fortress+, UC-Nexus ~ Battlestation, Mining/Fuel ~ Orbital).
+		# maxFleets = anchored close-defense at the station; patrolFleets = roamers on top
+		# (jump points / system sweeps; patient players can strike while they're far away).
+		# Proximity-gated (exist only within thresholdLY of the player); killing one
+		# suppresses a respawn slot for ~respawnDelayDays. Both counts 0 disables a tier.
+		"defense": {
+			"nexus":   {"thresholdLY": 2.0, "maxFleets": 2, "patrolFleets": 3, "respawnDelayDays": 20, "fpMin": 100, "fpMax": 160},
+			"ucnexus": {"thresholdLY": 1.5, "maxFleets": 2, "patrolFleets": 1, "respawnDelayDays": 25, "fpMin": 70,  "fpMax": 110},
+			# Sensor/Comm buoys: DIALOG-LAYER drone defenders (Domain survey-ship pattern, no
+			# campaign fleets). Only fpMin/fpMax are consumed (defender STRENGTH — tuned down
+			# from 50-70 after a cruiser spawned in playtest); the ~30d screen-respawn window
+			# lives in the mod rules.csv exArr_ rows. Tune HERE; applies on next game load.
+			"sensor":  {"thresholdLY": 1.0, "maxFleets": 1, "patrolFleets": 0, "respawnDelayDays": 30, "fpMin": 35,  "fpMax": 50},
+			"comm":    {"thresholdLY": 1.0, "maxFleets": 1, "patrolFleets": 0, "respawnDelayDays": 30, "fpMin": 35,  "fpMax": 50},
+			"mining":  {"thresholdLY": 1.0, "maxFleets": 1, "patrolFleets": 0, "respawnDelayDays": 30, "fpMin": 50,  "fpMax": 80},
+			"fuel":    {"thresholdLY": 1.0, "maxFleets": 1, "patrolFleets": 0, "respawnDelayDays": 30, "fpMin": 50,  "fpMax": 80},
+		},
+
+		# TRI-TACHYON PROTECTION MANDATE. Each named station carries one dormant Omicron
+		# point-defense complement. Targeting the system does not reveal it: an operation
+		# fleet must close on that station (or the player commit to attacking it) first.
+		# Culann separately houses one large pre-positioned strategic reserve for
+		# Black-Fleet-Assault-scale threats. It is not a Director node and launches no raids.
+		#
+		# IMPORTANT: this list is deliberately explicit rather than "all tritachyon markets".
+		# Culann/Eochu Bres are the Hybrasil heartland; Port Tse/Tibicena are discreet trade
+		# outposts with lighter sleepers and a higher reinforcement threshold.
+		"triTachyonDefense": {
+			"enabled": true,
+			"umbrellaRampDays": 365,
+			"scanIntervalDays": 0.25,
+			"standDownDays": 5,
+			"stationActivationRange": 1500,
+			"strategicReserve": {
+				"marketId": "culann",
+				"fpMin": 180,
+				"fpMax": 220,
+				"minThreatFp": 350,
+				"respawnDays": 180,
+				"activationLeadDays": 2,
+			},
+			"responsePrepareDays": 3,
+			"responseLateToleranceDays": 10,
+			"responseFpMult": 0.65,
+			"responseFpMin": 90,
+			"responseFpMax": 220,
+			"protectedMarkets": [
+				{"id": "culann",      "primary": true,  "localFpMin": 70, "localFpMax": 100, "respawnDays": 90,  "responseMinThreatFp": 350},
+				{"id": "eochu_bres",  "primary": true,  "localFpMin": 80, "localFpMax": 110, "respawnDays": 90,  "responseMinThreatFp": 350},
+				# responseMinThreatFp RAISED 200 -> 250 on 2026-08-02: at 200 the Ashen
+				# interdiction ladder was tripping this every session from war score ~0.11,
+				# which made a "strategic" response routine. NOT raised to 300 (Sean's first
+				# instinct) because that would disable the tier outright for interdiction: the
+				# hard ceiling on an Ashen op is spawnFpMax 190 x max fpMult 1.5 = 285 FP, so a
+				# 300 threshold can never be reached. 250 needs war score >= 0.63 -- late-war,
+				# rare, and still reachable. Raise spawnFpMax too if 300 is wanted.
+				# NOTE: this applies to EVERY hostile raider, not just Ashen. Black Fleet
+				# commerce raids (150-250 FP) will now essentially never trigger it; their
+				# assaults (350-500) still will.
+				# THE UMBRELLA GATE (Sean, 2026-08-02). The two outposts start UNCOVERED and
+				# gain their complements only once Omicron matures -- so early-campaign raids
+				# meet no machine defenders, and the response arrives as the sector heats up.
+				#
+				# spawnAtGrowth is the dedicated umbrella progress (0..1 over umbrellaRampDays),
+				# NOT Lattice construction and NOT another faction's schedule: the mandate
+				# protects Tri-Tachyon from everything, so keying it to e.g. the Ashen war clock
+				# would leave Port Tse uncovered against a Black Fleet assault for unrelated
+				# reasons. 0.85 lands around day 310 -- past one full Ashen war cycle
+				# (~210-270d), short of two.
+				#
+				# The umbrella clock is independent of Lattice damage. spawnAfterDays remains an
+				# absolute configuration fallback.
+				#
+				# Culann and Eochu Bres set neither field and stay covered from campaign start.
+				{"id": "port_tse",     "primary": false, "localFpMin": 35, "localFpMax": 55,  "respawnDays": 120, "responseMinThreatFp": 250, "spawnAtGrowth": 0.85, "spawnAfterDays": 540},
+				{"id": "tibicena",     "primary": false, "localFpMin": 45, "localFpMax": 65,  "respawnDays": 120, "responseMinThreatFp": 250, "spawnAtGrowth": 0.85, "spawnAfterDays": 540},
+			],
+		},
+
+		# Lattice construction clock. This no longer scales operation FP or controls the
+		# Tri-Tachyon umbrella; killing the UC-Nexus freezes only Lattice construction.
+		"escalation": {
+			"rampDays": 540,
+			"cap": 1.0,             # retained legacy/quest seam; no ordinary FP multiplier
+		},
+
+		# UC-system maturation (spread build): as growth crosses each stage threshold, the
+		# Director builds that station from the placement spec the Lattice generator wrote,
+		# or (raids: true) lets the node source raids. Since the readiness pool (2026-09-08)
+		# raid size is rolled network-wide, so Lattice raids are full size (raidFpMult removed
+		# 2026-10-06, OMI-7). The node never sources incursions until it completes.
+		# No campaign message on stage builds — op-source secrecy; the log carries them.
+		"growth": {
+			"stages": [
+				{"at": 0.50, "build": "lattice_mining_1"},
+				{"at": 0.75, "raids": true},
+				{"at": 1.00, "complete": true},
+			],
+		},
+
+		# Destroyable facilities per node (scanned by tag within each node's system).
+		# NOTE (OMI-9, 2026-10-06): no row below carries "mods" any more, so facility deaths no
+		# longer change capacity axes; that model was replaced by readiness on 2026-08-30.
+		# Fuel = tempo only (2026-07-02): a dead refinery slows sorties; ship range is unchanged.
+		# rebuildDays (RATIFIED 2026-07-06, war-capacity-design.md #8): a destroyed station
+		# respawns this many days after death IF its node's Nexus still lives; Nexus death
+		# during the window cancels the rebuild. 0/absent = never rebuilds.
+		# ucOnly: the row only exists on UC nodes (active nodes no longer host a UC-Nexus).
+		"assets": [
+			{"key": "lattice_ucnexus", "type": "ucnexus", "node": "omicron_lattice", "tag": "exile_omicron_asset_ucnexus", "freezeEscalation": true, "ucOnly": true},
+			{"key": "prime_mining_1",   "type": "mining",  "node": "omicron_prime",   "tag": "exile_omicron_asset_prime_mining_1",   "rebuildDays": 240},
+			{"key": "prime_mining_2",   "type": "mining",  "node": "omicron_prime",   "tag": "exile_omicron_asset_prime_mining_2",   "rebuildDays": 240},
+			{"key": "prime_fuel_1",     "type": "fuel",    "node": "omicron_prime",   "tag": "exile_omicron_asset_prime_fuel_1",     "rebuildDays": 240},
+			{"key": "cipher_fuel_1",    "type": "fuel",    "node": "omicron_cipher",  "tag": "exile_omicron_asset_cipher_fuel_1",    "rebuildDays": 240},
+			{"key": "cipher_fuel_2",    "type": "fuel",    "node": "omicron_cipher",  "tag": "exile_omicron_asset_cipher_fuel_2",    "rebuildDays": 240},
+			{"key": "vigil_mining_1",   "type": "mining",  "node": "omicron_vigil",   "tag": "exile_omicron_asset_vigil_mining_1",   "rebuildDays": 240},
+			{"key": "vigil_fuel_1",     "type": "fuel",    "node": "omicron_vigil",   "tag": "exile_omicron_asset_vigil_fuel_1",     "rebuildDays": 240},
+			{"key": "lattice_mining_1", "type": "mining",  "node": "omicron_lattice", "tag": "exile_omicron_asset_lattice_mining_1", "rebuildDays": 240},
+		],
+
+		# Legibility bands (descending). STALE since 2026-08-30 (OMI-9): with no asset-fed axes,
+		# facility kills cannot cross a band; only quest modifiers move these axes.
+		"thresholds": [0.85, 0.65, 0.45],
+		# (No debugMessages key: removed 2026-10-06, OMI-8 -- nothing read it. Omicron's
+		# decisions are all in starsector.log: launches, refusals with reasons, op ends,
+		# bombardments, station deaths/rebuilds, band changes.)
+	},
+
+	# Black Fleet ops (two-tier design ratified 2026-07-09), driven by BlackFleetRaidManager
+	# (vanilla RaidIntel pipeline). COMMERCE RAIDS hunt shipping: no ground raid, they apply the
+	# timed Corsair Activity condition (accessibility strangulation). ASSAULTS sack planets:
+	# vanilla ground raid + unrest + Corsair Activity + looted-docks disruption, and the loot
+	# comes home as "Business is Good" at the source anchor. Ops stop on their own when both
+	# anchors are dead. Quests can flip $exilebf_raids_enabled at runtime (governs BOTH tiers).
+	"exileblackfleet": {
+		# Dedicated freight is additional to the protected combat budget. Per route, unscaled.
+		"logistics": {
+			"minimumFreighterRouteFp": 40,
+			"minimumFreighterFp": 5,
+			"maximumFreighterFp": 15,
+			"assaultFreighterShareMin": 0.05,
+			"assaultFreighterShareMax": 0.10,
+			"collectorTankerFp": 5,
+		},
+		# Shared by Sallee and Lundy. Reserve drains daily; after zero, recover to threshold.
+		"prosperity": {
+			"maxReserveDays": 120,
+			"startingReserveDays": 90,
+			"dailyConsumption": 1,
+			"recoveryThresholdDays": 30,
+			"assaultRewardDays": 90,
+			"extortionRewardDays": 30,
+			"assaultDefeatPenaltyDays": 30,
+			"extortionLossPenaltyDays": 15,
+			# All collectors share this rolling allowance; unused proceeds are not banked.
+			"extortionWindowDays": 120,
+			"extortionAllowanceDays": 60,
+			"supplyBoost": 1,
+			"maxLootCommodities": 6,
+			"returnTimeoutDays": 365,
+			"minimumReturnFraction": 0.5
+		},
+		"sacked": {
+			"durationDays": 60,
+			"shortageDays": 30,
+			"portDisruptionDays": 30,
+			"shortageUnits": 3,
+			"producedCommodityCount": 3,
+			"accessibilityPenalty": 0.2,
+			"groundDefenseMultiplier": 0.75
+		},
+		# (Was a FAST-CADENCE TEST TUNE 2026-07-09; the values below are already back at the
+		# author-ratified production figures -- BF-5, 2026-10-06:) raid intervalDays 45 / startDelayDays 90;
+		# assault intervalDays 120 / startDelayDays 180.
+		"raid": {                     # the COMMERCE tier
+			"intervalDays": 45,       # production; launch cadence, 0.75-1.25x jitter
+			"spawnFpMin": 150,        # slimmer than before: commerce raids don't fight ground
+			"spawnFpMax": 250,        # battles, they just have to survive the trip and loiter
+			"maxActive": 2,
+			"startDelayDays": 90,      # production
+			"abortFraction": 0.5,
+			# COMMERCE feasibility (playtest-4 target-spread fix): only target systems whose
+			# WarSimScript enemy strength (stations EXCLUDED — commerce raids hunt shipping,
+			# they never assault fortifications) is <= op STRENGTH x this. Looser than assaults
+			# by design; the old shared 1.25 gate funneled everything onto Arcadia/Galatia.
+			# 0 disables.
+			# UNITS (BF-2, 2026-10-06): was 2.0 x raw FP. Re-derived from the logged strength
+			# per FP for commerce launches (Sallee k 2.42, Lundy k 1.14-2.28; launch-weighted
+			# mean ~2.07): 2.0 / 2.07 = ~0.95, so average launch odds stay as playtested. Per
+			# source it now differs: Sallee raids (better fleets) reach a little further, Lundy
+			# raids a little less far -- the correct-units behaviour.
+			"feasibilityMult": 0.95,
+			# Presence-only (2026-07-09 rulings): corsairs hunt shipping in-system for
+			# presenceDays; Corsair Activity lands on day 5 and LIFTS when they withdraw
+			# (planned end OR early, if the op drops below abortFraction). No planet contact.
+			"presenceDays": 45,
+			"maxShipSize": 2,         # raid fleets top out at DESTROYERS (author ruling)
+			"enabled": true,          # controls both 'raids' and 'assaults' by Black Fleet
+		},
+		"assault": {                  # the HEAVY tier — vanilla pirate-base tier 4-5 weight
+			"intervalDays": 120,       # production
+			"spawnFpMin": 350,
+			"spawnFpMax": 500,
+			"maxActive": 1,
+			"startDelayDays": 180,     # production
+			"maxShipSize": 3,         # cruisers now; set 4 when capitals should join (author)
+			# ASSAULT feasibility: full defense estimate (enemy strength + hostile stations)
+			# <= op STRENGTH x this — assaults DO fight ground battles. 0 disables.
+			# UNITS (BF-2, 2026-10-06): was 1.25 x raw FP; assault k mean ~1.78 (Sallee 2.42,
+			# Lundy 1.24-1.35), so 1.25 / 1.78 = 0.70 keeps average launch odds as playtested.
+			# Grudged targets still get x2 (GRUDGE_FEASIBILITY_RELAX).
+			"feasibilityMult": 0.70,
+		},
+		# EXTORTION racket (spec ratified 2026-07-09, built + playtest-tuned 2026-07-11):
+		# disguised-independent collector fleets visit markets with no functional military
+		# (disrupted counts as no — Omicron/BF attacks open extortion windows); arrival lands
+		# the unattributed 120d "Price Spikes" condition (player-buy +50%; refugee enclaves:
+		# crew +100% only). Cadence ADAPTS to assault outcomes (success = faster, failure =
+		# slower, hard-clamped to [min, max]). BOUNTY-MISSION LOGIC: the racket breaks when
+		# the collector FLAGSHIP dies (attacked collectors always flee — one pursuit catches
+		# everything). Player flagship-kill = BF rep minus + wreckage reveal, ALWAYS; post-
+		# collection adds target-faction minus + SILENT grudge (x10 assault weighting; never
+		# refugees). NPC interdiction = quiet collapse.
+		"extortion": {
+			"enabled": true,
+			"startDelayDays": 20,        # TEST (production suggestion: 60)
+			"initialIntervalDays": 45,   # spec: starts 45d
+			"minIntervalDays": 10,       # spec clamp
+			"maxIntervalDays": 60,       # spec clamp
+			# Concurrent collector fleets. 3 is Sean's deliberate value (2026-09-08; ruled
+			# 2026-10-06). Free to change; hard ceiling 12 (clamped, with a log warning).
+			"maxActive": 3,
+			"escortFpMin": 10,           # token escort — it must READ as a trade fleet
+			"escortFpMax": 25,
+			"freighterFp": 30,
+			# TESTING AID: announces each collector dispatch + destination in the message
+			# window (the racket is deliberately silent otherwise, which makes it
+			# untestable). !!! SET false BEFORE PRODUCTION — silence IS the design !!!
+			"debugMessages": false,
+		},
+		# Distance-weight falloff per LY in target picking: weight = 1/(1 + LY x this).
+		# Playtest-4: 0.25 made the eastern fringe near the anchors dominate permanently;
+		# 0.10 keeps closer-is-likelier while letting deep-Core ops happen.
+		"distanceFalloff": 0.10,
+		# Credits the RAIDED faction pays per frigate-equivalent corsair killed while an op
+		# runs (Omicron bounty port, playtest-4; SYSTEM_BOUNTY_REWARD rep rides along).
+		# Payer: the assault victim's faction / biggest hostile market (commerce). 0 disables.
+		"bountyPerFrigate": 3000,
+		# Rise-from-ashes strength ramp (ratified 2026-07-08): op FP x (startMult -> 1.0) over
+		# rampDays from game start. Lore: the fleet is rebuilding under Mourad.
+		"ramp": {
+			"rampDays": 365,
+			"startMult": 0.6,
+		},
+		# Anti-hotspot (playtest fix 2026-07-09: 3 simultaneous ops piled onto Arcadia): a
+		# system stays untargetable for this many days after ANY Black Fleet op launches at it.
+		"systemCooldownDays": 60,
+		# CONVOY AMBUSH (Pass 7 step 7f; war doc sec 6.2, ruled 2026-10-19 / 2026-11-01). When Midan's
+		# directive names a market and that market's relief convoy is in its system (travelling or
+		# unloading; checked every quarter day), one raider fleet appears at the jump point whose distance
+		# from the convoy is closest to spawnPreferredDistance, hunts it for up to huntDays (re-issuing the order if an
+		# encounter strips it), then leaves by the nearest jump point and despawns (never flies home).
+		# One at a time, one per directive. Obeys the raid kill switch and the strength ramp below;
+		# pays bountyPerFrigate (from the convoy's side) when the player kills it; no prosperity.
+		"ambush": {
+			"enabled": true,
+			"fpMin": 40,           # before the ramp; a relief convoy is ~48 FP with ~10 FP of escort
+			"fpMax": 60,
+			"maxShipSize": 2,      # destroyers, like the raids
+			# Fuel-ship FP handed to vanilla's factory on top of the combat budget (Sean, 2026-11-04:
+			# every Black Fleet strike comes from outside the Core, so the hunters carry a tanker).
+			# 3 = one Dram (burn 9, no speed cost beside destroyers). 0 = none. The launch log line
+			# "AMBUSH COMPOSITION" lists every hull that rolled.
+			"tankerFp": 3,
+			"huntDays": 20,
+			"leaveDays": 15,       # then removed if still here and the player cannot see it
+			# Which jump point the raiders come through: the one whose distance from the convoy is closest
+			# to this. 0 (Sean, 2026-11-02) = the jump point NEAREST the convoy, checked every quarter day:
+			# the raiders follow it in right behind it and catch it on the approach (Midan's tip-off). Relief
+			# convoys come in by the jump point nearest their destination -- at Arcadia, Syrinx's own, a few
+			# hundred units from the Citadel -- so there is no long in-system leg to intercept on.
+			# History: the farthest point (15-17k) never arrived in time; 5000 (Syrinx Passage at
+			# Arcadia) arrived on day 3 of the 10-day unload and denied 108 of 180 days (2026-11-02 run).
+			# A huge value (e.g. 999999) restores "always the farthest".
+			"spawnPreferredDistance": 0,
+		},
+		# Who Mourad burns. Player colonies are code-exempt (systems containing player markets
+		# are never targeted — same convention as Omicron ops; vanilla colony crises own that).
+		# IDs are vanilla FACTION ids, not .faction file names: the League is "persean" (its file is
+		# persean_league.faction). It was listed as "persean_league" until 2026-11-12, which matched
+		# no market, so Black Fleet never picked a League world through this list.
+		"targetFactions": ["hegemony", "persean", "tritachyon", "sindrian_diktat", "luddic_church", "independent"],
+	},
+
+	# ASHEN CRUSADE WAR DIRECTOR (spec ratified 2026-07-31; PASS 1 = the war clock only).
+	# Canon: docs/EXILES_ASHEN_CRUSADE_WAR.md. The Crusade's war on Tri-Tachyon runs on a
+	# four-phase clock: 1 Buildup -> 2 Interdiction -> (4 Culann Strike | 3 Rehearsal) -> 1.
+	# REFRAMED (docs sec 3.2a, ruled 2026-08-13): the clock is a COUNTDOWN on the Crusade's
+	# preparations to steal Tri-Tachyon's Corrupted Nanoforge from Culann. Phase 4 fires at most
+	# ONCE per campaign, when preparation completes (phase4TriggerScore) rather than on a sabotage
+	# roll; only a SUCCESSFUL strike closes that branch.
+	#
+	# Pass 1 launches nothing. Sabotage, relief fleets, interdiction raids, the blockade and
+	# the Culann strike arrive in Passes 2, 3, 4, 6 and 7 and add their own config blocks.
+	"exileashencrusade": {
+		"enabled": true,
+		# TESTING AID: war-clock phase transitions in the message window. Set false before
+		# production; the normal design is silent (docs sec 3.4).
+		"debugMessages": false,
+
+		# PLAYER OPTION / TEST COMPRESSION (docs sec 9.1). Multiplies EVERY duration in this
+		# block at config load (EXCEPT rehearsal.maxDays, culannStrike.maxDays and the disrupt days,
+		# which are not scaled -- bug sweep ASH-15). 1.0 = production. 0.1 turns Phase 1 into 9 days.
+		# ONE line to compress, ONE line to restore -- deliberately not the Black Fleet's
+		# per-value checklist, where a missed individual value ships silently.
+		# !!! RESTORE TO 1.0 BEFORE PRODUCTION !!!
+		"timeScale": 1,
+
+		# Durations and probabilities are different things: timeScale cannot compress dice,
+		# and fleet travel is real distance at real burn. These cover the rest. All inert
+		# at the defaults below; consumed by later passes as they land.
+		"testing": {
+			"sabotageAlwaysSucceeds": false,  # Pass 2: skip the odds, exercise the effects
+			# 1-4 PINS the clock to that phase; -1 = normal. NOTE the code re-forces whenever
+			# phase != forcePhase, so this does NOT "jump once" -- a game left on 3 never
+			# leaves Phase 3. Restored to -1 2026-08-09 after Pass 6a testing.
+			"forcePhase": -1,
+			"warScoreOverride": -1,           # 0..1 forces a mature war; -1 = normal
+		},
+
+		"warClock": {
+			"phase1Days": 90,               # Buildup: relief fleets + 1 sabotage/month
+			"phase1AfterAssaultDays": 150,  # the Crusade needs longer after a major assault
+			"phase2MinDays": 60,            # Interdiction raids + 1 sabotage/month
+			"phase2MaxDays": 90,
+			"phase3MinDays": 60,            # Rehearsal + 2 sabotage/month
+			"phase3MaxDays": 90,
+			# THE ONE-TIME CULANN STRIKE WINDOW. 60 -> 180, raised 2026-08-13: this phase must
+			# contain the 90-day muster, Providence->Hybrasil transit, AND the battle. At 60
+			# the phase expired before the fleet had sailed. NOTE (ASH-13, 2026-10-06): that
+			# 90-day muster was never built -- the waves launch at day 0 and vanilla's assemble
+			# stage takes days, not months -- so 180 now has slack. Value left alone; whether to
+			# shorten it is a pacing question for the tuning pass. The waves are scheduled as days
+			# INTO this window (see culannStrike.sweepDay/blockadeDay/armadaDay), so shrinking
+			# it back without moving those would cut the climax off mid-choreography.
+			"phase4Days": 180,
+			# THE PLAYER'S PHASE-4 WARNING is the telegraph (phase4TelegraphScore below, ~90 days
+			# before launch), then the strike intel, visible from launch, then vanilla's assemble
+			# and travel time before the armadas reach Hybrasil. (A phase4MusterDays key once sat
+			# here; nothing ever read it, and it was removed by Sean's ruling 2026-10-06, ASH-13.)
+			"startDelayDays": 0,            # Phase 1 is itself the opening grace period
+			# Phases 2/3 get variety from their min/max ranges; Phase 1 is a single value, so
+			# without this it ran an identical 90d every cycle (playtest 2026-08-01). Symmetric,
+			# so the sec 5.5 pacing arithmetic (which uses mean cycle length) is unaffected.
+			"phase1JitterFraction": 0.15,   # +/- 15%
+
+			# WAR SCORE IS THE PREPARATION METER (docs sec 3.2a, RULED 2026-08-13). 0..1, where
+			# 1.0 means the Crusade is ready to move on Culann. It keeps its three older jobs --
+			# shortening Phase 1, scaling op FP, gating the rehearsal escalation -- and that
+			# coupling is CHOSEN: breaking Ashen ops both delays the strike and keeps the Crusade
+			# weaker; ignoring them means harder ops on a shorter clock.
+			"phase1ScoreShorten": 0.33,     # fraction of Phase 1 removed at war score 1.0
+			"scoreFpMult": 0.5,             # op FP x (1 + warScore x this)
+
+			# THE COUNTDOWN. Phase 4 fires when preparation completes -- NOT on a sabotage roll.
+			# The old trigger was P(sabotage lands) x P(target was Culann), which Sean diagnosed
+			# as "a real weakness": the campaign's climax decided by dice.
+			#
+			# MEASURED ACCRUAL, ~0.37 per cycle:
+			#     relief convoys   ~5.5/cycle x 0.045 = 0.2475
+			#     rehearsal        1/cycle    x 0.12  = 0.12
+			#     special sabotage ~0.25/cycle x 0.08 = ~0.02
+			# A cycle is ~225-240d, so 1.0 arrives in ~2.7 cycles ~ 1.7 in-game years. The
+			# ratified band is 2-3 years, preferably ~2, so this sits slightly FAST. TUNE THE
+			# ACCRUAL RATES, NOT THIS THRESHOLD -- every other tunable here is a fraction of the
+			# 0..1 range, so moving the ceiling silently rescales all of them.
+			#
+			# Why it is a config key rather than a hardcoded 1.0: Sean asked (2026-08-13) whether
+			# 1.0 locks out a future Phase 5+. It does not, but the better answer is that a later
+			# arc wants ITS OWN CLOCK -- a meter is a compressed answer to one question, and after
+			# the heist the question changes. CLAUDE.md already rules post-Phase-4 escalation to be
+			# quest content. This knob is cheap insurance, not an invitation to chain phases.
+			"phase4TriggerScore": 1.0,
+
+			# THE SEC 7.0 TELEGRAPH: the player's warning that the great offensive is coming.
+			# REBUILT 2026-08-13 -- it used to hang off the special sabotage that queued Phase 4,
+			# and the reframe took that trigger away, which would have silently retired a RATIFIED
+			# requirement (ruling O4: the frustration is no warning, not no quest). Now a property
+			# of preparation itself, so it fires when the strike is genuinely near. At ~0.37/cycle
+			# this buys roughly 90 days of notice. Fires once per approach; re-arms if a strike is
+			# repelled, so a rebuilt Crusade warns the player again.
+			"phase4TelegraphScore": 0.85,
+
+			# AFTER A REPELLED STRIKE, preparation RESETS TO THIS FLOOR. Absolute, never a
+			# percentage of current: a relative 75% compounds (0.75 -> 0.56 -> 0.42) and the third
+			# retry drifts past the one-year target. Sean withdrew the relative version in the same
+			# message that proposed it -- do not reinstate it.
+			# At ~0.37/cycle, 0.5 rebuilds in ~1.35 cycles ~ 10 months, inside the ratified "no
+			# more than a year" ceiling with margin, since late accrual accelerates as Phase 1
+			# shortens. REPLACES the old "scorePerAssaultFailure" flat subtraction (renamed with
+			# Sean's approval 2026-08-13 rather than leave the name lying about the value).
+			"assaultFailureFloor": 0.5,
+
+			# Preparation added by a special sabotage landing on a CULANN target. Below the
+			# rehearsal's 0.12 on purpose: a rehearsal is a whole operation, this is one covert
+			# success. Culann-only, because the meter measures readiness against Culann; Eochu
+			# Bres successes are ordinary war damage.
+			# KNOWN TRADEOFF, ACCEPTED: relief convoys and rehearsals can both be attacked by the
+			# player, sabotage cannot -- so this is the one accrual source the player cannot
+			# contest. Measured dilution is ~5% of total accrual, small enough not to blunt the
+			# lever. Raising it meaningfully would.
+			"scorePerSpecialSabotage": 0.08,
+		},
+
+		# RELIEF CONVOYS (Pass 3, docs sec 4.1). During Phase 1 only, the Crusade sends aid
+		# convoys to the refugee enclaves, unloads, and leaves with volunteers. Genuinely the
+		# only power feeding these people AND harvesting them for its war -- both halves are
+		# sincere, which is the morally-grey pillar in one market condition.
+		#
+		# Relief is the STEADY organic source of war score (rehearsals and special sabotage add
+		# one-off amounts; corrected 2026-10-06, ASH-15). War score tips special-sabotage target
+		# selection toward Culann and raises its odds, so relief convoys are what eventually
+		# bring on the Phase 4 strike. Silent to the player: the convoy is visible in space
+		# and the Relief Shipment condition is the tell.
+		"relief": {
+			"enabled": true,
+			"cadenceDays": 30,          # Phase 1: the recruiting drive, double rate
+			# Phases 2 and 3 (ratified 2026-08-01). The Crusade would not stop feeding
+			# refugees merely because it started raiding, and confining its most characterful
+			# content to a third of the cycle meant the player rarely saw it. Phase 4 runs
+			# NO relief -- everything is committed to the Culann strike. 0 disables off-phase.
+			"offPhaseCadenceDays": 60,
+			"maxActive": 2,             # concurrent convoys; round trips outlast the cadence
+			"orbitMinDays": 10,         # time on station unloading and recruiting
+			"orbitMaxDays": 20,
+			"conditionDays": 60,        # Relief Shipment duration
+
+			# A faction that will not engage relief convoys; "" for none.
+			# NOT a disguise -- the convoys fly the Crusade's own flag, openly, which is the
+			# point. Tri-Tachyon has certainly worked out these are recruiting runs, but half
+			# the enclaves sit in its patrol space (maxios beside Tibicena in Magec, mairaath
+			# beside Port Tse in Mayasura) and shooting food convoys in front of every
+			# independent trader in the system is a PR catastrophe it cannot afford while it
+			# is already blamed for Omicron's attacks on Luddic worlds.
+			# Deliberately ONE faction, not a blanket ignore: Kanta's pirates share Magec with
+			# the maxios enclave, have no reputation to protect, and still hunt these convoys.
+			# The PLAYER is unaffected either way and can always attack them.
+			"ignoredByFactionId": "tritachyon",
+
+			# War score per convoy that unloads AND departs. A convoy destroyed in orbit has
+			# fed the enclave but delivered no recruits home, so it banks nothing -- the
+			# enclave keeps the aid either way.
+			# THIS MOVES WITH THE CADENCES ABOVE. Phase-1-only was ~3 convoys/cycle and 0.08;
+			# adding the off-phase runs is ~5.5/cycle, so 0.045 holds the ratified 2-3 in-game
+			# year band for the Phase 4 strike (docs sec 5.5). Change one, recheck the other.
+			"scorePerRelief": 0.045,
+
+			# Relief Shipment condition effects. Crew penalty is -1, not -2 (ruling J2): on a
+			# size-3 enclave -2 zeroed out crew availability entirely.
+			"stabilityBonus": 1,
+			"foodBonus": 1,
+			"suppliesBonus": 1,
+			"crewPenalty": 1,
+			"crewPriceMult": 1.5,   # what the PLAYER pays to hire crew; selling untouched
+
+			# Transports with an armed escort. Small: this is charity, not a task force.
+			"fleet": {
+				"combatFp": 20,
+				"freighterFp": 20,
+				"tankerFp": 6,
+				"transportFp": 12,
+			},
+
+			# Destinations: the four refugee enclaves, by STATION ENTITY id (the econ loader
+			# assigns its own market ids -- never hardcode those). Gilead is deliberately
+			# absent: it is Luddic Church territory, and a Crusade convoy there is a
+			# different and better quest beat.
+			"enclaveEntityIds": [
+				"corvus_abandoned_station",
+				"mairaath_abandoned_station1",
+				"yma_abandoned_station",
+				"maxios",
+			],
+			# Sources: Ashen markets in Providence with a functional spaceport.
+			"sourceEntityIds": [
+				"exileashen_penitent",
+				"exileashen_steadfast",
+				"exileashen_command_bastion",
+				"exileashen_silent_watch",
+			],
+			# Bound real fleet travel; NOT compressed by timeScale, because distance at burn
+			# is physical and does not scale with the war clock.
+			"travelTimeoutDays": 180,
+			"departTimeoutDays": 20,
+		},
+
+		# SABOTAGE (Pass 2, docs sec 5). The Pather half of the Crusade: no fleets, no intel,
+		# just a monthly roll and two effects. Silent to the player by design (sec 3.4) -- the
+		# Crusade Strike condition appearing on the market is the only ordinary tell.
+		"sabotage": {
+			"enabled": true,
+			"cadenceDays": 30,              # one batch per month
+			"attemptsPerMonthPhase1": 1,
+			"attemptsPerMonthPhase2": 1,
+			"attemptsPerMonthPhase3": 2,    # the Crusade presses harder during the blockade
+
+			# ODDS. baseChance is the chance with the market's defenses FULLY INTACT -- the
+			# author's ratified numbers (outposts ~25%, heartland practically impossible).
+			# Every NON-functional defensive industry (ground defenses, heavy batteries,
+			# patrol HQ, military base, high command, any station) multiplies it UP by
+			# defenseDownMult. So an Omicron or Black Fleet strike that disrupts Culann's
+			# Military Base opens a real Crusade sabotage window: three directors, one sector.
+			"baseChance": {
+				"culann": 0.02,
+				"eochu_bres": 0.02,
+				"tibicena": 0.25,
+				"port_tse": 0.25,
+			},
+			"defenseDownMult": 2.0,
+			"maxChance": 0.9,
+			# Below this, a target is "impossible" and is skipped. If EVERY target is below it,
+			# the month's attempt is abandoned entirely rather than rerolled onto the least-bad
+			# option (ruling J1) -- the Crusade husbanding scarce operatives.
+			"impossibleFloor": 0.01,
+
+			# EFFECT. Up to industriesDisabled functional industries matching these tags go
+			# offline, EXTENDING any existing disruption. Never population; never military
+			# (that is the special tier's job). "commerce" is deliberately absent: disrupting
+			# vanilla's TradeCenter removes the -3 stability it imposes, so sabotaging it would
+			# HELP the target (verified 2026-07-31).
+			"industryTags": ["mining", "refining", "heavyindustry", "lightindustry", "farming", "spaceport"],
+			"industriesDisabled": 3,
+			"disableDays": 60,
+			# Ruling L: spaceport/megaport disruption craters accessibility, vanilla's single
+			# biggest economic lever. Down-weighted and shortened so it is not the default pick.
+			"spaceportWeight": 0.35,
+			"spaceportDisableDays": 30,
+
+			# Crusade Strike condition: supplies and fuel always, plus this many of the
+			# market's most import-dependent commodities. Set the count high for the original
+			# "-2 to all commodities" behavior (ruling E).
+			"strikeDays": 30,
+			"strikeCommodityCount": 3,
+			"strikeMagnitude": 2,
+
+			# SPECIAL SABOTAGE: one attempt in the last windowDays of Phase 2, against a named
+			# installation. Since the sec 3.2a reframe (2026-08-13) a Culann success no longer queues
+			# the Phase 4 strike: it adds to the PREPARATION meter (key triggersPhase4 kept for compat)
+			# and posts an ambient message; the sec 7.0 telegraph now lives in AshenWarDirector (ASH-12).
+			"special": {
+				"windowDays": 30,
+				# Chance climbs with war score (sec 5.5): the Crusade commits more operatives
+				# as the war matures. Raise matureChance if the Culann strike lands later than
+				# the 2-3 in-game year target band.
+				"baseChance": 0.25,
+				"matureChance": 0.50,
+				# Culann targets are weighted this much versus 1.0 for the Eochu Bres pair.
+				# Early the Crusade probes; mature, it goes for the war-winning target.
+				"culannWeightEarly": 0.5,
+				"culannWeightMature": 6.0,
+				"disableDays": 90,
+				"unrestPoints": 2,          # routed through the unrest deciv-guard
+				"targets": [
+					{"market": "eochu_bres", "industry": "megaport"},
+					{"market": "eochu_bres", "industry": "farming"},
+					{"market": "culann", "industry": "orbitalworks",  "triggersPhase4": true},
+					{"market": "culann", "industry": "militarybase",  "triggersPhase4": true},
+				],
+			},
+		},
+
+		# INTERDICTION RAIDS (Pass 4, docs sec 6.1-6.3). Phase 2 only (isRaidingPhase; ASH-11). Presence-only
+		# ops: raiders hold a Tri-Tachyon system's approaches, apply Crusade Harassment, and
+		# withdraw when the window closes or they drop below abortFraction. They never touch
+		# planets and never fight stations.
+		"interdiction": {
+			"enabled": true,
+			"cadenceDays": 30,          # Phase 2 cadence (Phase 3 launches no interdictions; ASH-11)
+			# (Was a TEST TUNE 2026-08-01 "restore to 1" note; already restored -- ASH-15.)
+			# Production value is 1: "one raid at a time" (sec 6.1). Raised for testing because
+			# timeScale compresses cadence and presence but NOT hyperspace travel, so at 1 a
+			# single op holds the only slot for its entire real-time round trip and raids
+			# become too rare to observe under compression.
+			"maxActive": 1,
+			"presenceDays": 30,         # days spent working the lanes
+			"conditionDelayDays": 5,    # Crusade Harassment lands on this day of the presence
+			"abortFraction": 0.5,       # "retreat if reduced by more than 50%" (sec 6.1)
+			# 2 = destroyers (ratified 2026-08-01 after the live test, where cruisers turned up
+			# and beat Tri-Tachyon's orbital stations at Tibicena and Port Tse). Matches the
+			# Black Fleet COMMERCE tier this was ported from; their assault tier uses 3. Light
+			# hulls read as a raiding force rather than a battle line, and materially reduce
+			# the raiders' ability to take a station. The Crusade's heavy hulls wait for Phase 4.
+			"maxShipSize": 2,
+
+			# FP AND THE OMICRON LADDER (ratified 2026-08-01). Two DIFFERENT Omicron
+			# mechanisms sit on top of these numbers, and only one is FP-gated:
+			#   - Station sleepers at Port Tse and Tibicena wake on PROXIMITY (1,500u), with
+			#     no FP check at all. That is controlled by boldWarScore below, not by FP.
+			#   - The larger strategic response is FP-gated: 200 at the outposts, 350 in
+			#     Hybrasil (which also pulls Culann's 180-220 FP detachment).
+			# The band is capped under 200 so early-war raids wake NOTHING; scoreFpMult then
+			# lifts a mature war over 200 on its own. It never approaches 350, keeping the
+			# Culann detachment reserved for the Phase-4 strike and for Black Fleet assaults
+			# (350-500 FP), which already trip it with no extra code.
+			"spawnFpMin": 130,
+			"spawnFpMax": 190,
+
+			# PER-FLEET FP CEILING (2026-08-02, after live observation). Vanilla's AssembleStage
+			# opens by carving ONE fleet the size of the faction's approximateMaxFPPerFleet
+			# (~130 for Ashen's roster), so a 130-190 FP op arrived as one huge fleet plus one
+			# small one -- every time, structurally. This caps the carve, splitting the same
+			# budget into roughly four fleets instead.
+			# It is ALSO the fix for the big fleet suiciding into the Tri-Tachyon station:
+			# vanilla decides "engage something stronger?" on a strength ratio gated by commander
+			# personality (reckless 0.25 / aggressive 0.33 / else 0.5). A 130 FP fleet clears that
+			# bar against a station; a ~45 FP one does not. Raise this and they get bolder and
+			# fewer; lower it for more, smaller packs. 0 restores vanilla sizing.
+			#
+			# This governs fleet SIZE only. It does NOT control the fleet's display name -- that
+			# comes from the TYPE picked by pickNextType(), which the stage overrides separately
+			# to keep raiders off "Armada" (patrolLarge) and on Lance/Fury. Counter-intuitively,
+			# LOWERING this value makes vanilla pick patrolLarge MORE often, because its
+			# threshold is getLargeSize() + FP_MEDIUM. See the stage javadoc before touching it.
+			"maxFleetFp": 45,
+
+			# War score at which raiders stop loitering at the system centre and press onto
+			# the target market itself -- inside Omicron's 1,500u station-activation radius.
+			# THIS is the knob that decides when Port Tse and Tibicena wake up. Raise it to
+			# keep Omicron asleep longer; set it above 1.0 to keep the sleepers out entirely.
+			"boldWarScore": 0.25,
+
+			# Commerce-tier feasibility: raiders never fight ground battles or stations, so
+			# station strength is excluded and the gate is loose. Hybrasil stays in the pool
+			# on Sean's ruling even though its garrison usually vetoes it early -- with three
+			# target systems, cutting one costs more variety than it buys safety.
+			# Keep raiders OFF Tri-Tachyon's orbital stations while leaving them free to hunt
+			# Tri-Tachyon fleets. Live test 2026-08-02: they dog-piled Port Tse and knocked it
+			# offline twice. This is NOT fixable by FP or personality tuning -- vanilla's
+			# target-selection tally (TacticalModule.hasEnoughStuffAround) skips station-mode
+			# fleets entirely, so a station counts toward neither side and reads as a free
+			# target to any raider with a companion nearby. Instead each raider gets the station
+			# on its StrategicModule do-not-attack list, which is the one check that runs before
+			# everything else. Set false to compare against stock behaviour.
+			"suppressStationAttacks": true,
+
+			# Commerce-tier feasibility: only raid a system whose live hostile PATROL strength
+			# (stations excluded -- raiders never fight them) is <= op STRENGTH x this.
+			#
+			# MEASURED 2026-08-02, and the answer settled the "why is Hybrasil never picked"
+			# question for good. Live defense values from the feasibility log:
+			#     Hybrasil  1243-1560     Magec  23-38     Mayasura  31-101
+			# Hybrasil is 15-60x the others. It was briefly raised to 3.5 on the theory that the
+			# gate was marginally too tight; it is not marginal. Admitting Hybrasil would need
+			# ~8.7-10, which would push the Magec/Mayasura gates past 1500 and switch feasibility
+			# off everywhere. Reverted to 2.0 on that evidence.
+			#
+			# The gate is WORKING: Hybrasil is the corporate heartland (two large markets, a
+			# military base, a patrol HQ, both high-tier stations per docs sec 2) and 170 FP of
+			# Ashen destroyers loitering there would be annihilated. The interdiction target pool
+			# is Magec and Mayasura by geography, not by tuning. If Hybrasil should ever be
+			# raidable it needs a different mechanism -- a per-system exemption, or Phase-3-only
+			# access at much higher FP -- not a multiplier.
+			#
+			# Note this gate never binds on Magec/Mayasura anyway (defense 23-101 vs op FP
+			# 130-190); it exists to stop exactly the Hybrasil case.
+			#
+			# UNITS (ASH-8, 2026-10-06): the gate is now op STRENGTH x this, not FP x this --
+			# defense was always strength. The old 2.0 was re-derived from the logged strength
+			# per FP for Ashen sources (k 1.57-2.78, mean ~2.1): 2.0 / 2.1 = 0.95, so launch odds
+			# stay as playtested on average (the history above is in the old FP units). It now
+			# reads as odds: 0.95 = launch if defense <= 95% of our strength.
+			"feasibilityMult": 0.95,
+
+			# Anti-hotspot: days a system is off the menu AFTER an op ENDS (Sean, 2026-08-02).
+			# It used to be set at LAUNCH, which broke it -- an op outlives 30-45 days easily
+			# (travel + presenceDays + return), so the flag expired while the raiders were still
+			# on station. It therefore neither blocked a second op in the same system (only
+			# maxActive:1 was quietly doing that) nor delivered the anti-repeat it exists for.
+			# Same-system CONCURRENCY is now a separate, direct guard: the manager refuses a
+			# system that already hosts a live Ashen op, correct at any maxActive.
+			"systemCooldownDays": 30,
+
+			# Tri-Tachyon pays per raider hull the player destroys. Vanilla pays NOTHING for
+			# raid defense, so this is the heroism vector (pillar 4). 0 disables.
+			"bountyPerFrigate": 3000,
+
+			# Crusade Harassment condition (identical in effect to Corsair Activity, sec 6.2).
+			# conditionDays is a backstop only: the stage lifts it on withdrawal.
+			"conditionDays": 45,
+			"accessibilityPenalty": 0.5,
+			"importHitCount": 3,
+			"importHitUnits": 2,
+		},
+
+		# PHASE 3 -- THE REHEARSAL (Pass 6c, docs sec 6.4). ONE per Phase 3.
+		#
+		# The Crusade is not harassing Tri-Tachyon here, it is PRACTISING THE HEIST: the crews
+		# who will later steal Culann's Corrupted Nanoforge learn the job on a live target
+		# first. Hussars hold the jump points so nothing reinforces, the assault group cracks
+		# the orbital station, the ore goes home, everyone withdraws together. Phase 4 is the
+		# same operation at full scale -- which is why a player who has watched two rehearsals
+		# can read the Culann strike the moment it starts.
+		#
+		# Interdiction raids do NOT run in Phase 3 (they are Phase 2 only). That is also what
+		# keeps Crusade Harassment out of Phase 3, so it cannot stack invisibly with the Black
+		# Fleet's Corsair Activity. Vanilla Blockaded carries Phase 3 instead. Sabotage is
+		# unaffected and still runs at 2/month.
+		"rehearsal": {
+			"enabled": true,
+
+			# ORDERED, NOT RANDOM. Tibicena first; Port Tse once war score crosses
+			# escalateWarScore. Both carry mining, an orbitalstation and grounddefenses, so the
+			# fleet-generating industry is the only real difference -- patrolhq spawns 2 small
+			# fleets, militarybase 2 small + 1 medium -- which makes Port Tse the harder target
+			# despite being the smaller market.
+			"targetMarketIds": ["tibicena", "port_tse"],
+			# War score at which the Crusade moves up to the harder target. Relief convoys bank
+			# roughly 0.25/cycle, so 0.4 lands Tibicena on rehearsal 1 and Port Tse on 2.
+			# Gated on SCORE, not on cycle count (which would de-escalate on a third cycle) and
+			# not on the previous rehearsal's success (which would hand the player a switch that
+			# stops escalation outright). A failed rehearsal costs score, which delays crossing
+			# this line anyway -- same intuition, no brittle gate.
+			"escalateWarScore": 0.4,
+
+			# NO LAUNCH FEASIBILITY GATE, unlike interdiction (Sean, 2026-08-09): the targets are
+			# fixed and the operation is deliberate, so the Crusade commits what the job needs
+			# rather than declining to sail. What stops it suiciding is FP scaled by war score,
+			# the damage-abort, and the tactical canBeat() check at the moment of attack.
+			#
+			# 160-220 -> 120-160, RATIFIED 2026-08-13. Measured, not guessed: the 38-line
+			# feasibility trace (doc sec 14.9) caught nine rehearsals and the assault group NEVER
+			# came close to a real fight -- crusade strength 182-947 against defenses of 0-246,
+			# ENGAGE 38 times out of 38, with orbital stations reading only ~98-120 whether the
+			# market carries patrolhq or militarybase. Roughly -25%, which still leaves a 2-3x
+			# margin at the moment of attack.
+			#
+			# WHY NOT LOWER. Two things make the floor here higher than it looks:
+			#   1. canBeat() OVERCOUNTS. WarSimScript.getFactionStrength() sums every non-station
+			#      Ashen fleet in the system, so the three Hussar BLOCKADE fleets are in the
+			#      numerator even though suppressStationTargeting() keeps them out of the station
+			#      fight. Cutting this number reduces real striking power faster than it reduces
+			#      the figure the gate reads.
+			#   2. FAILURE IS THE PLAYER'S LEVER, and it does not distinguish causes. With no
+			#      launch gate, an assault group that cannot clear canBeat() does not withdraw --
+			#      it sits until maxDays and fails, costing the same 0.25 war score a player-broken
+			#      rehearsal costs. Ambient under-tuning would quietly write into the countdown.
+			# Sean's call 2026-08-13, taking the conservative cut over the 100-140 alternative.
+			"spawnFpMin": 120,
+			"spawnFpMax": 160,
+
+			# 3 = CRUISERS, and the contradiction with interdiction.maxShipSize (pinned at 2) is
+			# DELIBERATE. That value exists specifically to keep raiders off Tri-Tachyon's
+			# stations; the rehearsal wants exactly that capability. Do not "fix" one to match
+			# the other. Sean's testing note 2026-08-09: Hussar fleets already beat these
+			# orbital stations, so cruisers are here for the visual read more than the fight.
+			"maxShipSize": 3,
+			# Per-fleet FP ceiling. Higher than interdiction's 45 -- the rehearsal is supposed to
+			# arrive as a striking force, not a scattering of raiding packs.
+			"maxFleetFp": 90,
+
+			# ON SUCCESS: mining and whichever fleet-generating industry the market has both go
+			# down for this long, taking the LONGER of any existing disruption rather than the
+			# sum. 30 days is short enough that the market is not left as prey for the Black
+			# Fleet or pirates -- "wounded, not dying", the same logic as Culann's Heavy
+			# Batteries in sec 3.2a.
+			"disruptDays": 30,
+			# Recent Unrest, routed through the deciv guard like every other Exiles source.
+			"unrestPoints": 2,
+			# The assault group's window over the target, in days: live fleets strike as soon as
+			# canBeat() lets them; at the END of the window the op resolves on strength in BOTH player-
+			# range branches (window-end fix 2026-09-28), so this is when an unresolved rehearsal lands.
+			# NEW 2026-09-19 (doc sec 14.11): until then vanilla overwrote the window on arrival with
+			# its own 20-45d roll (the log read 21-43d), and when the group arrived against a
+			# defence it could not beat, vanilla zeroed the window and the op FAILED on the same
+			# tick ("FAILED after 0d of 0d", three times at Port Tse) -- charging the 0.25
+			# failure score for an op that never held. The stage now restores this value, so the
+			# group sits and re-asks canBeat() per tick, as the no-launch-gate ruling intended.
+			# 40 sits near the middle of the vanilla roll, so pacing is unchanged by default.
+			"maxDays": 40,
+
+			# THE PLAYER'S LEVER ON THE COUNTDOWN (sec 6.4). War score IS the preparation meter
+			# under the sec 3.2a reframe, so breaking rehearsals delays the Culann strike.
+			# Worth more than a relief convoy's 0.045: this is the Crusade's real preparation.
+			"scorePerRehearsal": 0.12,
+			# What the FIRST failed rehearsal costs. Consecutive failures decay by failureDecay,
+			# which makes the total delay a player can ever buy a GEOMETRIC SERIES:
+			#     max total delay = scorePerRehearsalFailure / (1 - failureDecay)
+			# At 0.25 and 0.6 that ceiling is 0.625 war score, roughly 2.5 cycles. Sean's
+			# directive: "a focused player buys one extra cycle, a very focused player can buy
+			# more than one, but should not be able to completely stop it." Raise failureDecay
+			# to let a determined player buy more; lower it to buy less. It can never reach
+			# infinity, so the Crusade can never be stalled outright. The failure counter resets
+			# on any success, so suppression has to be sustained to keep paying.
+			"scorePerRehearsalFailure": 0.25,
+			"failureDecay": 0.6,
+		},
+
+		# HUSSAR BLOCKADE (Pass 6a, repurposed by 6c). A Hussar Blockade Fleet and two pickets
+		# ride along with the PHASE 3 rehearsal, HOLD THE SYSTEM'S JUMP POINTS so Tri-Tachyon
+		# cannot reinforce, and withdraw when the op does. Phase 4 wave 2 also launches one at
+		# Culann (ASH-14); Phases 1 and 2 launch nothing.
+		#
+		# CHANGED 2026-08-09: they used to park on the market, using vanilla's
+		# FGBlockadePlanetAction -- which is its SIEGE action, and caused fleets to mill about,
+		# break off to pursue, and drag the station into fights. Now the default
+		# FGBlockadeAction: hold the gates. The Blockaded penalty is identical either way,
+		# because BlockadeFGI applies it to every targetFaction market in the system and never
+		# consults specificMarket.
+		#
+		# Built on vanilla's own BlockadeFGI: fleet creation, travel, intel, the Blockaded
+		# market condition and all cleanup are the engine's, not ours. What Exiles adds is
+		# naming and equipping the fleets, and ending with the op.
+		#
+		# suppressStationAttacks below is now BELT-AND-BRACES rather than load-bearing, but it
+		# is kept because the two halves of the rehearsal want OPPOSITE settings: the assault
+		# group is meant to crack the station, these fleets are not.
+		#
+		# The kill switch stays. Pass 6b (the docking dialogue, the component that could lock a
+		# player out of a market) was CANCELLED for Ashen and relocated to the Hegemony/League
+		# war, so the risk it contained is gone -- but being able to switch the Hussars off
+		# without touching the op they escort is still worth having.
+		"blockade": {
+			"enabled": true,
+
+			# Vanilla's own default (FGBlockadeParams). Deliberately NOT changed: sec 6.4
+			# originally specified -100%, and Sean ruled 2026-08-05 to keep vanilla's number
+			# rather than add a deviation for a 10-point difference.
+			#
+			# IT IS NOT FLAT. BlockadeFGI.getAccessibilityPenalty() scales it by how the
+			# blockading fleets compare to the system's defenders:
+			#     below 0.75x defenders -> 0        (present but ineffective)
+			#     0.75x to 1.25x        -> half     (-30%)
+			#     above 1.25x           -> full     (-60%)
+			# Stacked with Crusade Harassment's -50% from the raid it accompanies, the
+			# ceiling is -110% and only lands where the Crusade decisively outguns the
+			# system. A marginal blockade self-limits to -80%, a weak one to -50%.
+			#
+			# Vanilla display quirk, not our bug: the intel screen prints this RAW value
+			# while the market condition tooltip prints the SCALED one, so the intel
+			# over-promises against a marginal blockade.
+			"accessibilityPenalty": 0.6,
+
+			# 0 SO THE HUSSARS DEPART WITH THE ASSAULT GROUP (2026-08-10). At 7 the blockade
+			# sat in its PREPARE action for a week while the rehearsal's assemble stage started
+			# immediately -- both launched on the same tick, but the gates were still unheld when
+			# the station fell (Tibicena at elapsed 18d, Port Tse at 9d). They are one operation
+			# and should arrive together. Raise it only if you WANT the blockade to trail.
+			"prepDays": 0,              # gather time before departure
+			# Upper bound only. AshenBlockade.shouldAbort() ends the blockade when its
+			# companion raid ends, which is the real duration (Sean's ruling: the blockade
+			# fleets sit still on a market and would be easy prey without the raid screening
+			# them). This is the backstop if that ever fails to fire.
+			"payloadDays": 45,
+
+			# Route-damage fraction at which the blockade breaks off. CORRECTED 2026-09-28 (Sean's
+			# ruling; Heg-League war doc sec 14.15.12): the old note here said vanilla has no
+			# strength abort -- it does. FleetGroupIntel aborts a group whose LIVE surviving FP
+			# falls below 33% of what it spawned (more than 67% losses), and that is what actually
+			# ends a blockade fought on screen, because vanilla never writes route damage for live
+			# blockade fleets (so the old 0.5 here never fired in a log). Set to 0.67 so this
+			# value agrees with vanilla's live break. Supersedes sec 6.4's "below 50% strength".
+			"abortFraction": 0.67,
+
+			# Keep blockade fleets off the station they are blockading.
+			#
+			# FGBlockadePlanetAction is vanilla's SIEGE action, not a passive blockade: it aims a
+			# MilitaryResponseParams(ActionType.HOSTILE, ...) at the market's own entity, and
+			# ActionType has only CANCEL and HOSTILE -- there is no passive option. Its one
+			# vanilla user is the Knights of Ludd takeover, whose fleets are MEANT to besiege the
+			# planet. We adopted the class for its positioning (fleets park on the market, which
+			# Pass 6b's docking dialogue needs) and inherited the siege intent with it.
+			#
+			# Live test 2026-08-06: the fleets arrived at Port Tse and immediately engaged the
+			# orbital station. Same vanilla behaviour as sec 14.4 Finding C -- station strength
+			# never enters the target-selection tally, so FP tuning cannot deter it -- and the
+			# same fix, a per-fleet doNotAttack entry, refreshed on the periodic tick.
+			#
+			# The interdiction stage's own suppression does NOT cover these fleets: it scopes to
+			# the raid's route source, and the blockade is a separate FGI with its own routes.
+			#
+			# WATCH: the avoid path this triggers steers away from station-mode entities. Right
+			# for raiders loitering nearby, but these are supposed to sit ON the market. If they
+			# drift off, the fallbacks are makeFleetsHostile=false or overriding
+			# orderFleetMovements to drop the hostile response. Set false to compare with stock.
+			"suppressStationAttacks": true,
+
+			# FALSE, and leave it false unless you are deliberately comparing.
+			#
+			# This maps to GenericRaidParams.makeFleetsHostile, which calls
+			# FleetCreatorMission.triggerMakeHostile() -> MemFlags.MEMORY_KEY_MAKE_HOSTILE,
+			# i.e. "$cfai_makeHostile". That is the PLAYER-scoped campaign-fleet-AI flag family,
+			# not faction hostility -- its siblings are MAKE_HOSTILE_TO_PLAYER_TRADE_FLEETS,
+			# AVOID_PLAYER_SLOWLY and ALLOW_PLAYER_BATTLE_JOIN_TOFF, and sec 14.4 Finding A
+			# established the same player-scoping for MAKE_HOLD_VS_STRONGER.
+			#
+			# Live test 2026-08-06: with this true the blockade ignored the station it was
+			# blockading and hunted the PLAYER across the system. The interdiction raid stages
+			# never set this flag, which is exactly why raiders ignore the player and the
+			# blockade did not.
+			#
+			# Nothing is lost by disabling it: the Ashen Crusade is already hostile to
+			# Tri-Tachyon through ordinary faction relations. Vanilla agrees -- the Knights of
+			# Ludd takeover sets this false even though it targets the player's own colony.
+			"makeFleetsHostile": false,
+
+			# Vanilla's 1-10 fleet scale. The LARGEST becomes the named "Blockade Fleet" (renamed from
+			# "Hussar ..." 2026-08-09) and anchors the line; the rest become "Blockade Picket" and carry
+			# vanilla's NPCHassler, which turns approaching NPC traffic away.
+			#
+			# Ruling F cut "other fleets will be turned away" as too expensive to build. It
+			# cost one line in the end -- NPCHassler is vanilla's own, used by the Knights of
+			# Ludd takeover on exactly this kind of picket -- so Sean reinstated it
+			# 2026-08-05. Watch the first live test for fleet-AI thrash.
+			#
+			# Smaller than the Knights' 10/4/4/3/3: this is a squadron detached from a raid,
+			# not a holy armada.
+			"fleetSizes": [6, 3, 3],
+		},
+
+		# ==============================================================================
+		# PHASE 4 -- THE CULANN STRIKE (Pass 7, docs sec 7). ONCE PER CAMPAIGN.
+		# ==============================================================================
+		#
+		# Everything the player watched in two Phase-3 rehearsals, at full scale and against
+		# the real objective. Choreographed as THREE WAVES over ~10 days, building to a
+		# climax (Sean, 2026-08-13):
+		#
+		#   day 0  wave 1  a large but LIGHT interdiction sweep -- destroyers, ordinary fleet
+		#                  size, more hulls than usual. Disrupts the defenders; is not itself
+		#                  a threat to them.
+		#   day 4  wave 2  the gates shut. Two fleets, ONE PER JUMP POINT (Hybrasil has
+		#                  exactly two), cruisers, holding rather than hunting.
+		#   day 9  wave 3  THE CAPITALS. Two armadas: one cracks Culann, one screens.
+		#
+		# WAVE 3 GETS THE WIDEST GAP ON PURPOSE. It is the beat Sean cares most about, and
+		# launch order is precise while ARRIVAL order is not -- assemble and travel jitter
+		# blur the seams (the rehearsal trace measured fleets trickling in 4 -> 7 -> 9). The
+		# gap absorbs that, and a campaign message on arrival makes the beat unmissable even
+		# if the waves overlap.
+		#
+		# FLEET BUDGET: 6 + 2 + 3 = 11 Ashen fleets, capped for lower-spec machines (Sean cut
+		# this from an estimated 13-15 on 2026-08-13). DO NOT raise these during tuning
+		# without deciding you accept the load; fewer/bigger is also the better capital-ship
+		# look, so raising fleet COUNT is the wrong lever anyway -- raise FP instead.
+		"culannStrike": {
+			"enabled": true,
+			"targetMarket": "culann",
+
+			# Days into Phase 4 that each wave LAUNCHES (not arrives -- add muster and travel).
+			#
+			# ALL ZERO AS OF 2026-08-16 -- the staggered build-up is RETIRED. The first full
+			# three-wave test showed why: with the sweep launching 9 days ahead of the armadas
+			# it had spent most of its 30-day presence window before the capitals arrived, so
+			# only 5 Ashen fleets were in Hybrasil at the moment of the strike instead of 11.
+			# The Crusade was defeating itself in detail against the single strongest fleet
+			# configuration vanilla can build (see assaultFp below).
+			#
+			# Launching together does NOT mean arriving in lockstep -- assemble and travel
+			# jitter still spread arrivals over a few days, which is the texture the stagger was
+			# reaching for. It just no longer costs the operation its concentration.
+			"sweepDay": 0,
+			"blockadeDay": 0,
+			"armadaDay": 0,
+
+			# ---- WAVE 1: the sweep. 6 fleets. ----
+			# maxFleetFp 45 is interdiction's own value, so ~270 FP lands ~6 fleets of
+			# destroyers. maxShipSize 2 keeps them light: they are here to disrupt.
+			# Hybrasil is PERMANENTLY rejected by interdiction feasibility (measured defense
+			# 1278-1483 against a gate of ~300), so this launches DIRECTLY -- the same
+			# "deliberate operation, no launch gate" principle ruled for rehearsals.
+			"sweepFp": 270,
+			"sweepFleets": 6,           # HARD count; the per-fleet cap is derived from it
+			"sweepMaxShipSize": 2,
+
+			# ---- WAVE 2: the gates. 2 fleets, one per jump point. ----
+			# fleetSizes has one entry PER FLEET, so two entries = two fleets. Heavier than
+			# the Phase-3 blockade's [6,3,3] per fleet, because this one is meant to hold
+			# against a defended system rather than escort a rehearsal.
+			#
+			# THIS IS ALSO THE ONLY SHIP-SIZE LEVER ON THIS PIPELINE. Blockade fleets are built
+			# by vanilla's FleetGroupIntel.spawnFleet() off these numbers and the faction
+			# roster -- there is no maxShipSize to set, unlike the raid pipeline. Want heavier
+			# gate-holders? Raise the entries. (A "blockadeMaxShipSize" key was written here
+			# during the build and REMOVED on checking: it was wired to nothing.)
+			#
+			# NOTE they enter TOGETHER at whichever jump point is nearest Providence and one
+			# crosses to the far gate: FleetGroupIntel drives the whole group from a single
+			# RouteData, so separate arrivals would need two blockade FGIs contending for one
+			# system's Blockaded condition. Sean informed 2026-08-13; accepted as is.
+			"blockadeFleetSizes": [7, 7],
+
+			# ---- WAVE 3: the armadas. 3 fleets total. ----
+			# FLEET COUNTS ARE HARD CAPS. FP IS A PURE STRENGTH DIAL. (Sean, 2026-08-15,
+			# after the first Phase-4 playtest.)
+			#
+			# The previous arrangement expressed the cap as a flat armadaMaxFleetFp of 400 and
+			# it did NOT behave: AssembleStage carves the budget into chunks of at most the
+			# cap, so the cap is really the COUNT control. Testing screenFp at 1000 produced
+			# THREE screening fleets and a run of 5 armada fleets against an agreed cap of 3 --
+			# raising the dial bought quantity where the intent was quality.
+			#
+			# Now the counts below are the contract and the per-fleet cap is derived from
+			# fp / fleets. Double assaultFp and each of the two fleets doubles; the group never
+			# splits. THIS IS THE LEVER FOR "the Tri-Tachyon defense fleet is too strong" --
+			# raise the FP, never the count.
+			"assaultFleets": 2,
+			"screenFleets": 1,
+			#
+			# WHY THESE NUMBERS. sec 7.1 specced 500-700 total, set 2026-07-31 against Black
+			# Fleet assault benchmarks BEFORE Hybrasil could be measured. It is wrong.
+			# Measured: Hybrasil TT patrol strength 1278-1483 (8 log samples, stations
+			# EXCLUDED), plus Culann's battlestation_high, plus Omicron's 180-220 FP
+			# detachment -- a real bar around 1600-2000. Most of that is Tri-Tachyon's
+			# CAPITAL ASSURANCE RESERVE, the one big capital-system defense fleet every major
+			# faction gets, so it is a single decisive engagement rather than attrition.
+			#
+			# DESIGN TARGET (Sean): the Crusade wins comfortably if the player does not
+			# intervene, by a margin a determined player can erase.
+			#
+			# STILL AN EXTRAPOLATION. The 1.7-3.2x FP-to-effective-strength ratio behind these
+			# numbers was observed at ~200 FP and projected to ~1000. The strike logs the real
+			# comparison on arrival -- MEASUREMENT ONLY, never a gate. Tune from that log.
+			"assaultFp": 800,
+			"screenFp": 375,
+			"armadaMaxShipSize": 4,     # capitals: the roster carries retribution + invictus
+
+			# The screen does NOT apply Crusade Harassment (Sean, 2026-08-15). It is a military
+			# body, not an economic one -- and the playtest caught it applying the condition to
+			# both Hybrasil markets. With the sweep applying the SAME condition to the SAME
+			# markets, the two ops would share it, and the Pass-4 finding is that the first to
+			# withdraw lifts it while the other is still live. hasLiveOpIn() guards that for
+			# ordinary interdiction, but Phase 4 runs several ops in one system by design.
+			# Set in code (AshenInterdictionStage.setApplyHarassment), not config: it is a
+			# structural property of the screen op, not a tuning choice.
+
+			# The screening armada's name. NO FACTION PREFIX (Sean, 2026-08-13): it is set
+			# with setNoFactionInName, so this string is the COMPLETE name the player reads.
+			# The Knights of Gilead are the Crusade's founding splinter and are meant to stand
+			# out. The two ASSAULT fleets deliberately have no entry here -- they take the
+			# engine's own composition, "Ashen Crusade Armada", which required re-enabling
+			# PATROL_LARGE (suppressed in 2026-08-02 for 45 FP raiders; see
+			# HiddenSourceAssembleStage.allowLargeType).
+			"screenFleetName": "Knights of Gilead Holy Armada",
+
+			# ---- OUTCOME (sec 3.2a ruling 3) ----
+			# Five industries, differentiated. HEAVY BATTERIES RECOVERS FASTEST OF THE FIVE ON
+			# PURPOSE -- "keep Culann wounded not dying", so it does not spend a year as a
+			# free target for the Black Fleet, pirates and the player. Net shape: hard shell
+			# back within a month, reach gone for a year.
+			# Applied with vanilla's max-semantics (setDisrupted(days, true)) -- the LONGER of
+			# any existing disruption and this one, NEVER the sum.
+			# The orbital battlestation is deliberately absent: a station beaten in combat is
+			# already offline 30-60 days by vanilla's own rules (Sean, 2026-08-13).
+			"heavyBatteriesDays": 30,
+			"spaceportDays": 60,
+			"refiningDays": 180,
+			"orbitalWorksDays": 360,
+			"militaryBaseDays": 360,
+
+			# Recent Unrest, applied to BOTH Culann and Eochu Bres (ratified 2026-08-09) --
+			# cracking Tri-Tachyon's industrial heart shakes the whole system. Guard-routed,
+			# which matters more here than anywhere else in the spec: Hybrasil is already
+			# double-teamed by Omicron ops and Eochu Bres takes this with no compensating
+			# event of its own.
+			# TEST ITEM, NOT A RULING: five simultaneous shutdowns against the verified
+			# ~16-month deciv threshold. Watch Culann's stability on the first live run.
+			"unrestPoints": 2,
+			# The armada's window over Culann, in days. Live fleets strike as soon as the raid AI
+			# reaches the market (canBeat is unconditionally true here); out of the player's range
+			# the op autoresolves at the END of the window. NEW 2026-09-19 (doc sec 14.11): this
+			# stage inherits the rehearsal's arrival fix. Without it vanilla's own arrival strength
+			# check could clear the target and zero the window, REPELLING the climactic strike on
+			# the tick it arrived -- the one op in the war that is designed to have no gate at all.
+			"maxDays": 45,
+		},
+
+		# The four Tri-Tachyon markets this war is fought over (sec 2). Shared by sabotage
+		# targeting and interdiction target selection; a market that changes hands drops out
+		# of the war automatically.
+		"targetMarkets": ["culann", "eochu_bres", "tibicena", "port_tse"],
+	},
+
+	# REFUGEE CONVOYS (Phase-1 prototype, reception redesign 2026-08-17): bounded weak civilian
+	# fleets leave enclaves or Gilead, orbit weighted Core markets, and create
+	# the temporary Refugee Encampments condition. On one random day from 20-25, local
+	# spaceport control has one 70% chance to order it away; a failed check is not repeated,
+	# and the convoy leaves on its own by day 30. Live RaidIntel target systems are excluded.
+	"exilerefugee": {
+		"enabled": true,
+		"maxActiveConvoys": 3,          # ordinary Refugee convoys (deliberate, ruled 2026-10-06); 0 prevents new launches; hard ceiling 12
+		"firstLaunchDelayDays": 5,      # TEST: lets the first convoy be found quickly
+		"intervalMinDays": 60,
+		"intervalMaxDays": 100,
+		"retryDelayDays": 7,            # no safe source/target: retry soon, don't burn a cadence
+		"sourceCooldownDays": 180,
+		"destinationCooldownDays": 180,
+		"minDestinationStability": 5,
+		"encampmentDelayDays": 10,
+		"receptionCheckMinDays": 20,
+		"receptionCheckMaxDays": 25,
+		"earlyDepartureChance": 0.7,
+		"orderedDepartureDelayDays": 0.25, # announcement-to-movement pause; actual timing follows manager ticks
+		"maxOrbitDays": 30,
+		"aftermathDays": 10,
+		"sourceEntityIds": [
+			"corvus_abandoned_station",
+			"mairaath_abandoned_station1",
+			"yma_abandoned_station",
+			"maxios",
+			"gilead",
+		],
+		# Explicit story boundary in addition to the bidirectional HOSTILE check. Ordinary
+		# mod-added civilized Core factions remain eligible if they are not hostile.
+		"excludedFactionIds": [
+			"player",
+			"pirates",
+			"luddic_path",
+			"exilerefugee",
+			"exileashencrusade",
+			"exileomicron",
+			"exileblackfleet",
+			"exilemidan",
+		],
+		"fleet": {
+			"combatFp": 2,
+			"freighterFp": 6,
+			"tankerFp": 4,
+			"transportFp": 16,
+			"linerFp": 4,
+		},
+		# REFUGEE SALVAGE EXPEDITIONS: Core battlefield cleanup; no Nex requirement.
+		# Ships appear outside player view, collect materials/weapons, then retire offscreen.
+		"salvageExpeditions": {
+			"diagnostics": true, # Temporary passive Vulture/Refugee test logging; restart after changing.
+			"enabled": true,
+			"maxActiveExpeditions": 3,    # independent of convoys; 0 disables launches; hard ceiling 12
+			"maxPerSystem": 1,           # hard ceiling 3
+			"cycleDays": 1,              # battlefield scan interval, minimum 1 day
+			"playerSpawnRangeLY": 1.6,   # new launches near player; 0 = current system only; capped at 10 LY
+			"responseMinDays": 2,
+			"responseMaxDays": 4,
+			"systemLaunchSpacingDays": 5,
+			"maxCollectionDays": 15,
+			"returnCargoFraction": 0.9,
+			"commodityDeliveryFraction": 0.5,
+			"commodityBonusCap": 500,    # accumulated quantity per commodity, per recipient
+			"commodityBonusDays": 30,    # each contribution expires independently
+			"salvageDays": 0.5,          # time spent at each target; minimum 0.25
+			# Legacy decorative-route keys retained for config continuity; unused by cleanup:
+			"preparationDays": 2,
+			"homeOrbitDays": 2,
+			"travelDaysPerLY": 1.5,
+			"maxDistanceLY": 35,
+			# Legacy weighting keys (unused): all factions' Core battle remains now qualify.
+			"liveExilesRaidWeight": 4,
+			"distanceScaleLY": 12,
+			"fleet": {
+				# 1-2 generated escorts plus exactly one Calceus, Shepherd, and standard Tarsus.
+				"combatFp": 10,
+				"maxShips": 5,
+				"maxShipSize": 2,
+			},
+			"danger": {
+				# A hostile fleet is a danger at >= this x the expedition's effective STRENGTH.
+				# In flight: the expedition's own live strength. At launch (REF-3, 2026-10-06):
+				# the last dispatched expedition's measured strength (logged on the dispatch
+				# line); before the first dispatch of a session, combatFp x this (the old floor).
+				"strengthMult": 0.75,
+				"checkMinDays": 0.25,
+				"checkMaxDays": 0.5,
+				# Hostile stations and home patrols inside this market bubble do not poison
+				# the whole system, but Refugees will not select salvage inside it.
+				"hostileMarketSafetyRadius": 2500,
+				# 2026-09-21 (Isirah read): the LAUNCH screen no longer treats a hostile market's
+				# own traffic as a system-wide block. A hostile fleet sourced from a market in the
+				# same system -- patrol, scout or convoy -- defers a launch only within
+				# launchThreatRadius of the chosen wreck; raiders, war fleets and out-of-system
+				# hostiles still defer from anywhere. Refugees brave a system they know hostile
+				# patrols roam and rely on the in-flight visible-threat check to run when spotted.
+				# false = the old system-wide screen. Radius clamped to 500-10000.
+				"localDefenseExemptAtLaunch": true,
+				"launchThreatRadius": 2500,
+			},
+		},
+		# TESTING AID: launch/arrival/condition/reception/departure messages. Set false before
+		# production; the normal player-facing design is ambient fleet + market condition.
+		"debugMessages": false,
+	},
+
+	# =====================================================================================
+	# HEGEMONY - PERSEAN LEAGUE WAR DIRECTOR  (docs/EXILES_HEG_LEAGUE_WAR.md)
+	# =====================================================================================
+	# The FOURTH SIBLING on the vanilla RaidIntel pipeline (CLAUDE.md sec 6): a peer of the
+	# Ashen, Black Fleet and Omicron directors that shares their utilities and none of their
+	# control flow. This is a DIRECTOR key, not a faction id -- both belligerents are vanilla.
+	#
+	# The Bilateral Crisis Engine has two layers (spec sec 3.2):
+	#   Layer 1  TENSION, a 0-100 meter that carries memory ACROSS cycles. The state machine
+	#            forgets; the meter does not. It never decays below its floor -- the nanoforge
+	#            grievance is permanent (R2), so the war can cool but never evaporate.
+	#   Layer 2  A six-state crisis cycle that produces the visible drama:
+	#              1 TENSION -> 2 INCIDENT -> 3 RETALIATION -+-> 4 ESCALATION -> 5 CEASEFIRE -> 6 DE-ESC -> 1
+	#                                                        +-> 5 CEASEFIRE ------------> 6 DE-ESC -> 1
+	#            Below hawkThreshold most cycles take the short branch. That is what makes the
+	#            war read as "skirmishing but contained" without ever scripting restraint.
+	#
+	# WAR WEARINESS IS THE QUIET FAILSAFE. Losses make a stand-down MORE likely at the table,
+	# so the hotter the war runs the harder the system pulls back, and the player only ever
+	# sees the outcomes (spec sec 1.4 goal 2, Feel vs Reality).
+	#
+	# PASS 1 SHIPS THE SKELETON ONLY -- states transition, values move, debug lines print, and
+	# NOTHING launches. Interdiction raids, surgical strikes + the incident table, system
+	# blockades, the full ceasefire/asymmetry pass, planetary blockade + recovery convoys, the
+	# Midan injection and the player-interception dialogue arrive in Passes 2-8 and add their
+	# own blocks here. Keys that nothing reads are deliberately NOT shipped early.
+	"exilehegleague": {
+		"enabled": true,
+
+		# TESTING AID: state transitions, ceasefire outcomes, tension initialisation, the Nex
+		# layer report and the periodic meter line, all in the message window. PLAYER OPTION:
+		# false is production (ruled 2026-11-08); true is there for players who want to see the
+		# war's internals or self-troubleshoot. The design is silent (spec sec 3.4 -- internal
+		# meter movements are never player-facing; state beats are INTEL).
+		"debugMessages": false,
+		# Days between periodic meter reports. 0 = only print state transitions.
+		"debugMeterIntervalDays": 30,
+
+		# PERFORMANCE cadence, not a design knob. R6c forbids hardcoding ownership -- markets
+		# can change hands, especially under Nexerelin -- so "does each side still hold a
+		# market?" must be a LIVE query. That query allocates, and CLAUDE.md sec 7 forbids
+		# allocating inside advance(), so it runs on this slow clock instead of every tick.
+		# Deliberately NOT scaled by timeScale: it is real-frame housekeeping, not a duration
+		# in the war's fiction. Raising it is free.
+		"premiseCheckIntervalDays": 5,
+
+		# PLAYER OPTION / TEST COMPRESSION (spec sec 9). Multiplies EVERY duration in this block
+		# at config load, and DIVIDES the per-day rates so a compressed clock still moves the
+		# meter by the same amount over the same stretch of cycle. 1.0 = production.
+		# ONE line to compress, ONE line to restore -- deliberately not a per-value checklist.
+		# !!! RESTORE TO 1.0 BEFORE PRODUCTION !!!
+		# WARNING (spec sec 9): blockades cannot be tested below 1.0 -- travel is uncompressed
+		# while the payload window compresses, so the op never gets past TRAVEL. That bites
+		# from Pass 4 onward; Pass 1 has no fleets and compresses cleanly.
+		"timeScale": 1,
+		"startDelayDays": 0,
+
+		# Durations and probabilities are different things: timeScale cannot compress dice.
+		# All inert at the defaults below.
+		"testing": {
+			# 1,3,4,5,6 PIN the machine to that state (the code re-forces whenever state !=
+			# forceState, so this does NOT jump once). -1 = normal. 2 (INCIDENT) is rejected
+			# on purpose: it is an instant state with a zero dwell and pinning it would fire
+			# an endless run of incidents. Since 2026-10-03/06 every pin CLOSES ITS CYCLE on
+			# each exit (1: after the incident, no retaliation; 3: after retaliation; 4: after
+			# each escalation window, so each window is a fresh escalation with its own entry
+			# salvo; 5: after each ceasefire roll), logged "TEST: forceState N pin". A pin does
+			# not cut tension, so pair forceState 4 with tensionOverride below 85 (the General
+			# Engagement line) to test ordinary escalations.
+			"forceState": -1,
+			"tensionOverride": -1,        # floor..cap (15..100) forces the meter, clamped; -1 = normal
+			# "hegemony" / "persean" fixes the offender; "" = roll. Read by the INCIDENT state AND,
+			# since 2026-09-21, by a forceState 3 pin: pinned RETALIATION skips INCIDENT, so the
+			# director seeds offender/victim from this value (or the coin) when it enters the state
+			# with none -- otherwise every pinned cycle logs "no incident parties" and nothing sails.
+			"forceIncidentOffender": "",
+			# PASS 3: forces every incident to one table entry, so its telegraph text can be read
+			# without waiting for the weighted picker to offer it. One of "border_clash",
+			# "convoy_destroyed", "violent_inspection", "civilian_casualties"; "" = roll.
+			# An id that matches no entry logs a warning and rolls normally.
+			"forceIncidentType": "",
+			# PASS 7 step 7b: true posts one sample story announcement (with Admiral Cunningham's
+			# portrait) on every game load, to check the shared announcement intel and the portrait
+			# registration. false = normal. Never commit true.
+			"postStoryAnnouncement": false,
+			# PASS 7 step 7c: true makes Midan READY immediately (skips firstReadyDays and any
+			# rebuild), so the opportunity score and the strike measurements can be read at once.
+			# false = normal. Never commit true.
+			"midanReadyNow": false,
+			# Pass 7 step 7d-2: once ready, launch without waiting for the opportunity score (the
+			# hard rails still apply: feasibility, one strike in flight, Hegemony ownership,
+			# Battered). Pair with midanReadyNow to see a strike at once. Never commit true.
+			"midanLaunchNow": false,
+			# Pass 7 step 7e-1: start the ladder at this 1-based rung in a NEW game (0 = off), e.g. 2 to
+			# test Sphinx without playing rung 1 first. Pair with the two pins above. Never commit non-zero.
+			"midanStartRung": 0,
+			# Pass 7 step 7f: every relief record writes Midan's CONVOY_AMBUSH directive (the
+			# directiveChance roll always succeeds, while none is active). Never commit true.
+			"midanForceDirective": false,
+			# PASS 8a: true makes the next interdiction launch attempt after each game load skip the
+			# cadence wait (feasibility and caps still apply), so a raider can be found at once.
+			# Logged "TEST PIN: interdictionNow". Never commit true.
+			"interdictionNow": false,
+			# PASS 8a: "hegemony" or "persean" sets that faction's authorization-codes flag
+			# ($exiles_authCodes) / official-business flag ($exiles_hl_officialBusiness) for 30 days on
+			# every game load, so the two reserved stop options can be seen. Nothing else sets
+			# either flag in v1. "" = normal. Never commit non-empty.
+			"grantAuthCodes": "",
+			"grantOfficialBusiness": "",
+			# PASS 8a MEASUREMENT: days between "STOP DIAG" log lines for any interdiction or
+			# planetary blockade you are in the same system as. Each line lists every one of the
+			# op's fleets there: its current order, what it is chasing, how far it is from the
+			# focus market and from you, whether it can see you, and the flags vanilla's hassle
+			# script filters on. Log only; nothing in game changes. 0 = off. 0.5 is a good test
+			# value (about 50 lines for a full 24-day presence). Never commit above 0.
+			"stopDiagnosticsDays": 0,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 8a-1 -- PLAYER STOPS (docs/EXILES_PASS8_PLAN.md sec 11; rulings sec 1.1a)
+		# ---------------------------------------------------------------------------------
+		# While an interdiction or a planetary blockade (squeeze) is in its action window, its
+		# fleets may stop the player: vanilla's own HasslePlayerScript does the pursuit and the
+		# hail, rules.csv (ids exileHLStop*) holds the dialogue. The goal is to harass and slow
+		# trade, so COMPLYING costs combat readiness and no money; PAYING buys speed. Raiders run
+		# a shakedown, cordons charge an official fee.
+		#
+		# A fleet that is HOSTILE to the player never stops them -- it attacks, as before. An
+		# Exile-start player (League Hostile, Hegemony Vengeful) therefore sees none of this until
+		# a relation is repaired to Inhospitable or better.
+		#
+		# Every number below is a starting point (ruled 2026-11-16), to be tuned from the
+		# "Exiles Heg-League STOP:" log line.
+		"playerInterception": {
+			# PLAYER OPTION / kill switch. false = no fleet is marked; existing marks lapse within
+			# two days. Quests can override at runtime with $exiles_hl_interception_enabled.
+			"enabled": true,
+
+			# The toll: player fleet points x this (200 is vanilla's Pather tithe), times the
+			# acting side's multiplier, clamped to floor..cap and rounded to 100. A 20-point
+			# fleet pays 4,000; the cap is reached at 250 points. tollCap 0 = no cap.
+			"tollPerFleetPoint": 200,
+			"tollFloor": 2000,
+			"tollCap": 50000,
+			"tollMult": { "hegemony": 1.0, "persean": 1.0 },
+			# Applied to the toll after a successful Negotiate (reputation Welcoming or better)
+			# and after a caught lie.
+			"negotiateMult": 0.5,
+			"caughtLieMult": 2.0,
+			# Raiders also take supplies in kind: toll / this, rounded up. A unit of supplies has
+			# a base price of 100, so at 150 paying in supplies is the cheaper way out, in return
+			# for the trouble of restocking. At 100 the two were worth the same and credits were
+			# simply the better choice (Sean, 2026-11-22, after paying both ways in play).
+			"creditsPerSupply": 150,
+
+			# The lie: chance = lieBaseChance + standing x lieRepShift, clamped. Standing runs
+			# -1..1, so Inhospitable is about 35%, neutral 50%, Welcoming about 65%. The result is
+			# fixed per fleet per month; reloading does not reroll it.
+			"lieBaseChance": 0.5,
+			"lieRepShift": 0.5,
+			"lieMinChance": 0.2,
+			"lieMaxChance": 0.8,
+
+			# Reputation points lost with the acting side for a caught lie and for facing an
+			# officer down with a stronger fleet. Neither can push the player below repFloor
+			# (a vanilla reputation level name), so talking never tips a relation into hostility.
+			# repFacedDown was 1 until 2026-11-22: Sean ruled 1 too low for threatening a fleet,
+			# "at least 3".
+			"repCaughtLie": 2,
+			"repFacedDown": 3,
+			"repFloor": "INHOSPITABLE",
+
+			# How rough the inspection is when the player complies: the share of the STOPPING
+			# fleet's points applied as combat-readiness damage. 0.2 is vanilla's League enforcer.
+			"inspectionWeight": { "inspect": 0.2, "cordon": 0.3 },
+
+			# After the player refuses a RAIDER, fighting that fleet for this many days costs a
+			# little reputation but does not force hostility (vanilla's low-reputation-impact
+			# flag). Cordons are official and keep the full consequences.
+			"raiderLowRepImpactDays": 2,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# LAYER 1 -- THE TENSION METER (spec sec 3.2.1)
+		# ---------------------------------------------------------------------------------
+		# Every number here is TUNING, not canon: the framework was ratified 2026-08-26, the
+		# values were explicitly not. Expect to move them after the first soak test.
+		"tension": {
+			"start": 25,
+			# THE PERMANENT FLOOR. R2: the director's loop never ends the war. Only a quest
+			# that exposes Midan's false flag can dissolve the grievance.
+			"floor": 15,
+			"cap": 100,
+			# Quiet decay. Applied in TENSION and DE-ESCALATION only -- a crisis actively
+			# unfolding is neither a "quiet stretch" nor de-escalation, so the middle states
+			# do not bleed the meter. 0.05 -> 0.03 with the 2026-09-13 containment amendment
+			# (spec sec 3.2.5): once contained cycles stop paying the ceasefire cut, this was
+			# the second oversized sink.
+			"decayPerDay": 0.03,
+			# 4 -> 8, RULED 2026-09-19 after the first organic-escalation trace (spec sec 3.2.6):
+			# at 4 the whole 30-day "fast decay" was worth 3.6 points -- no cooling at all
+			# against a +10.5 contained cycle. 8 makes DE-ESCALATION worth 7.2.
+			"deescalationDecayMult": 8.0,
+			# THE BRANCH (spec sec 3.2.5, RATIFIED 2026-09-13) -- three ways out of RETALIATION:
+			#   tension >= hawkThreshold     -> ESCALATION. The hardliners get their surge.
+			#   warning <= tension < hawk    -> roll cycle.preemptiveCeasefireChance: success
+			#                                   convenes ceasefire talks early; failure contains.
+			#   tension <  warningThreshold  -> CONTAINED. The border playbook absorbs the
+			#                                   incident: straight back to TENSION, no talks, no
+			#                                   cut, no fast decay. Most cycles, by design.
+			# Before the amendment every cycle ended at the table and the table's expected cut
+			# (-13) alone outweighed a cycle's gains (+12.25), so the meter pinned at its floor
+			# and ESCALATION never fired (sec 14.4, confirmed live). Restraint is not weakened by
+			# this: it moves from the ceasefire table to the playbook at low tension.
+			"hawkThreshold": 60,
+			"warningThreshold": 45,
+			# GENERAL ENGAGEMENT (spec sec 3.2.4 A): the rare, bounded "real shooting war"
+			# super-state. Entered when ESCALATION begins above this meter reading OR after
+			# generalEngagementHotCycles consecutive cycles that reached ESCALATION. It always
+			# ends in forced ceasefire talks with elevated stand-down odds -- the campaign can visibly
+			# hit "real shooting war" without breaking containment, and the pullback itself
+			# reinforces "intervention came just in time". The true containment-breaking war is
+			# quest-gated finale content and the director never produces it (R1 B).
+			"generalEngagementThreshold": 85,
+			"generalEngagementHotCycles": 3,   # 0 disables that second route
+
+			# Meter GAINS. Pass 1 moves only perIncident and perTalksCollapse; the rest are
+			# the seams later passes call through the director's reportX() hooks.
+			"gains": {
+				"perIncident": 8,
+				"perCompletedOp": 2,          # Pass 2+
+				"perMidanInterference": 12,   # Pass 7 -- false flag / misattributed proxy hit
+				"perTalksCollapse": 4,
+			},
+
+			# Ceasefire CUTS (spec sec 3.2.2 state 5; "summit" retired by ruling R15).
+			"cuts": {
+				"standDown": 30,
+				"partial": 12,
+				# Talks collapse is BOTH a minimal cut (the meeting still happened) and a listed
+				# tension gain. Both are applied; net movement is upward at these defaults,
+				# which is the intended reading.
+				"collapse": 2,
+			},
+		},
+
+		# WAR WEARINESS -- fleet/market losses per side (spec sec 3.2.1).
+		# A bloody cycle makes a full ceasefire MORE likely at the table. TWO feeds:
+		#   (a) player-inflicted losses via Pass 2's per-kill bounty path (0.05 per FP), which
+		#       quietly makes mercenary work a real input;
+		#   (b) the NPC OUTCOME FEED, BUILT 2026-09-19 (spec sec 3.2.6 ruling 3). The first
+		#       organic-escalation trace ran 12 landed strikes and 24 completed ops with
+		#       weariness at exactly ZERO -- the designed damper was absent from an NPC-only
+		#       war, and the meter sat in a 55-85 band for 1,050 days. Outcome-based, no battle
+		#       listener: a landed op wounds the side it was aimed at, an op that did not land
+		#       cost the side that mounted it. Every credit writes a permanent
+		#       "Exiles Heg-League weariness Heg X / League Y" log line -- tune from those.
+		# decayPerDay: 0 -> 0.025 (2026-09-13, sec 3.2.5) -> 0.10 (2026-09-19). The NPC feed
+		# accrues ~10x the player path, so the decay has to match or weariness ratchets. A bloody
+		# escalation (~50 points across both sides = +1.0 stand-down weight) fades over ~500 days.
+		# Calibration target: a full ceasefire after an ESCALATION should be ~40%, not 25%.
+		"weariness": {
+			"decayPerDay": 0.10,
+			"standDownWeight": 0.02, # stand-down weight added per point of TOTAL weariness
+			"perStrikeSuffered": 12,        # to the STRUCK side when a strike lands
+			"perInterdictionSuffered": 4,   # to the VICTIM when an interdiction completes
+			"perOpFailed": 8,               # to the ACTOR when its op is driven off / aborts
+			# PASS 4 (decision D5): to the VICTIM when a system blockade holds its whole payload
+			# window. Sits between a completed interdiction (4) and a landed strike (12): weeks of
+			# shut jump points hurt more than raiders on the shipping lanes and less than an
+			# industry knocked offline. A blockade that is driven off pays perOpFailed instead.
+			"perBlockadeSuffered": 8,
+			# PASS 6 (decision D80.1): to the VICTIM when a planetary squeeze holds its whole
+			# presence window. Sits between a completed interdiction (4) and a system blockade (8):
+			# one colony's traffic strangled for six weeks hurts more than raiders on the lanes and
+			# less than a whole system's jump points being shut. A squeeze that is driven off pays
+			# perOpFailed instead, like every other op.
+			"perSqueezeSuffered": 6,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# LAYER 2 -- THE CRISIS CYCLE (spec sec 3.2.2)
+		# ---------------------------------------------------------------------------------
+		# Minimum dwell times are the bureaucratic lag: nothing in this war happens fast.
+		"cycle": {
+			"tensionDwellDaysMin": 60,     # the ambient war -- most of the campaign lives here
+			"tensionDwellDaysMax": 180,
+			"tensionDwellCollapseMult": 0.5,  # collapsed talks shorten the NEXT quiet stretch
+			"escalationWindowDays": 45,    # hard time limit -- bureaucracies cannot sustain it
+			"generalEngagementDays": 75,   # the extended window (spec proposes 60-90)
+			# Ceasefire-talks dwell. The spec does not number this one; sec 3.2.2 requires every
+			# state to have a dwell, so Pass 1 supplies a conservative default rather than
+			# inventing a rule -- flag it in the first tuning pass.
+			"interventionDays": 20,
+			"deescalationDays": 30,
+			# THE DIAL for how often the war boils over (spec sec 3.2.5). Rolled ONCE at the
+			# RETALIATION exit when tension sits in the warning band [warningThreshold, hawk):
+			# success = the doves convene ceasefire talks before the hawks get their surge;
+			# failure = CONTAINED. Fictionally, "how often the doves get there first". Lower =
+			# more ESCALATIONs. A probability, so timeScale never touches it.
+			# Target (Sean, 2026-09-13): 2-4 ESCALATIONs per campaign. Arithmetic in sec 14.5;
+			# the honest estimate at 0.30 is one per ~8-10 cycles (~3.5-4 game years), which
+			# lands 2-4 over a 10-15 year campaign. TUNE FROM THE MEASUREMENT LINE
+			# ("Exiles Heg-League ESCALATION #n reached"), not from the estimate.
+			"preemptiveCeasefireChance": 0.30,
+			# Which side causes a given incident. 0.5 = symmetric. Pass 3's weighted incident
+			# TABLE will supersede the flavour of this; the offender/victim split stays here.
+			"incidentOffenderHegemonyChance": 0.5,
+
+			# Ceasefire outcome weights, normalised at roll time.
+			"interventionOutcomeWeights": {
+				"standDown": 1,
+				"partial": 2,
+				"collapse": 1,
+				# Extra collapse weight per tension point above hawkThreshold: "an angrier
+				# sector is harder to talk down". 0.05 -> 0, RULED 2026-09-19 (spec sec 3.2.6):
+				# this was the positive-feedback term. Collapse nets +2 and halves the next
+				# quiet stretch, so making it LIKELIER above the hawk line locked the first
+				# organic trace in a 55-85 band for 1,050 days (5 consecutive escalations, 2
+				# General Engagements). Kept as a knob; the fiction now rides on weariness.
+				"collapsePerTensionOverHawk": 0,
+				# Multiplier on stand-down weight when the cycle ran as a General Engagement.
+				"generalEngagementStandDownMult": 3.0,
+			},
+		},
+
+		# ---------------------------------------------------------------------------------
+		# ASYMMETRY -- peers, different shapes (spec sec 3.2.3). Same state machine, different
+		# numbers; no forked code, ever.
+		# ---------------------------------------------------------------------------------
+		# Pass 2 adds opWeights.interdiction, maxConcurrentOps and presenceDaysMult. The
+		# remaining per-side op weights arrive with the passes that launch those op types.
+		"hegemony": {
+			# Slow to start, hard to stop. Its industrial advantage is expressed as ENDURANCE
+			# (more ops per window, faster recovery), never as bigger skirmish hulls.
+			"retaliationLagDays": 20,
+			# Relative chance the Hegemony is the side mounting a given interdiction op. LOW
+			# on purpose: the Hegemony's contributions skew toward system blockades and
+			# production strikes (Passes 3-4), not commerce raiding. 0 = never interdicts.
+			# "surgical" is the mirror image and HIGH: spec sec 3.2.3 gives production strikes to
+			# the Hegemony. It weights ESCALATION counter-strikes only -- the RETALIATION strike is
+			# mounted by whichever side the incident wronged, which is not a weighted choice.
+			# "blockade" (PASS 4) is HIGH for the same reason: spec sec 3.2.3 makes the system
+			# blockade the Hegemony's signature operation. It is the real driver of who blockades
+			# more, because the whitelisted system map is near parity at 3 : 2.
+			# "planetary" (PASS 6, decision D80.1) is LOW, mirroring interdiction: a planetary
+			# squeeze is trade disruption aimed at one colony -- accessibility down, prices up, no
+			# ground action -- which is the League's line, while the Hegemony's punitive instinct
+			# is to take a shipyard offline. It weights the RETALIATION op-type roll against
+			# "surgical". The Hegemony still squeezes roughly one cycle in four: rare, not
+			# forbidden.
+			"opWeights": { "interdiction": 1, "surgical": 3, "blockade": 3, "planetary": 1 },
+			# Concurrent ops this side may run during ESCALATION. (TENSION uses the shared
+			# low-rate cap, interdiction.tensionMaxConcurrentOpsPerSide, instead. Blockades have
+			# their own cap, blockade.maxActivePerSide, and never consume this one.)
+			"maxConcurrentOps": 2,
+			# "Longer op durations" (spec sec 3.2.3): multiplies interdiction.presenceDays and
+			# blockade.payloadDays, and from PASS 6 planetaryBlockade.presenceDays too.
+			"presenceDaysMult": 1.25,
+			# PASS 6 (decision D80.5 item 9) -- THE HEGEMONY ENDURANCE KNOB. Fraction of a strike's
+			# relief budget that this side's recovery convoys actually deliver. spec sec 3.2.3's
+			# "industrial advantage = faster market recovery", expressed as one multiplier rather
+			# than as more convoys: the Hegemony heals its whole extension, the League heals part
+			# of it and its wounds linger. MUST BE <= 1.0 -- above 1 would heal a wound below the
+			# design-normal disruptDays band and break spec sec 4.6's floor, so the code clamps it.
+			"recoveryDaysMult": 1.0,
+		},
+		"persean": {
+			# Quick, light, commerce-focused. It fights the way a trade league would.
+			"retaliationLagDays": 10,
+			# HIGH: interdiction is the League's signature operation. LOW on surgical, for the
+			# same reason -- it fights commerce, not production.
+			# LOW on blockade too (PASS 4): a trade league strangles commerce, it does not sit on
+			# another power's jump points for a month and a half. It still does it sometimes.
+			# HIGH on planetary (PASS 6, D80.1), the mirror of surgical: strangling one colony's
+			# trade is exactly what a commerce-focused power does when it has to answer an
+			# incident. 3 : 1 each way, so each side's RETALIATION reads as a different KIND of
+			# anger without a line of forked code.
+			"opWeights": { "interdiction": 3, "surgical": 1, "blockade": 1, "planetary": 3 },
+			"maxConcurrentOps": 2,
+			# "Shorter ops" (spec sec 3.2.3).
+			"presenceDaysMult": 0.8,
+			# PASS 6 -- see the Hegemony's note. The League heals three-quarters of the extension,
+			# so its wounds settle ~25% above the design-normal band. <= 1.0, clamped in code.
+			"recoveryDaysMult": 0.75,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 2 -- INTERDICTION RAIDS (spec sec 4.1) + the geography they consult (sec 2 / R6)
+		# ---------------------------------------------------------------------------------
+		# The third port of the presence-raid pattern (BlackFleetCommerceRaidStage ->
+		# AshenInterdictionStage -> here). Fleets loiter in the target system for presenceDays,
+		# never touch a planet, and every market the raided side owns there takes
+		# exile_hl_interdiction until they withdraw.
+		#
+		# WHICH STATES: TENSION (spec sec 3.2.2 -- "low-rate interdiction raids along the border")
+		# and ESCALATION ("multiple interdiction ops"). RETALIATION is one punitive surgical
+		# strike or planetary blockade (Passes 3/6), POLITICAL_INTERVENTION is the ceasefire
+		# table, and DE-ESCALATION is where ops stop -- so no interdiction runs in any of those.
+		# A CONTAINED cycle (sec 3.2.5) skips both of the last two and returns straight to
+		# TENSION, so interdiction resumes at the TENSION rate at once: the playbook absorbed
+		# the incident, nobody paused.
+		"interdiction": {
+			"enabled": true,
+
+			# Days between launch ATTEMPTS during TENSION, jittered +/-25%. Scaled by timeScale
+			# above (the shipped timeScale is 1, so 90 means 90 days).
+			"cadenceDays": 90,
+			# Multiplier on that cadence during ESCALATION -- the surge window wants several ops.
+			# A state change re-rolls the pending wait for the new state, carrying progress
+			# proportionally (HL-2, 2026-10-06).
+			"escalationCadenceMult": 0.35,
+			# Concurrent ops PER SIDE during TENSION. ESCALATION uses each side's own
+			# maxConcurrentOps instead, which is where Hegemony endurance will eventually show.
+			"tensionMaxConcurrentOpsPerSide": 1,
+
+			# !!! GUESSES. Every FP number here ships with a MEASUREMENT LINE and must be tuned
+			# FROM THAT LINE, not from intuition (spec sec 5; the assaultFp:800 lesson). Search the
+			# log for "Heg-League INTERDICTION LAUNCHED" -- it prints the op's FP, the measured
+			# live defense of the system chosen, and the gate that admitted it -- and for
+			# "Heg-League interdiction feasibility" for every candidate considered and rejected.
+			"spawnFpMin": 120,
+			"spawnFpMax": 200,
+
+			# THE SHIP-FARMING GUARDRAIL (spec sec 5, rulings S6 + R3). 2 = destroyers. Native
+			# FleetParamsV3 lever, consumed by FleetFactoryV3 -- there is no post-generation
+			# filtering anywhere in this director, and deliberately no XIV sweep: the cap alone
+			# removes five of the six XIV hulls and a rare Enforcer XIV is accepted (R3).
+			# DO NOT RAISE without an author ruling; cruisers and capitals belong in DEFENSIVE
+			# patrols and blockades, where their wrecks are earned rather than farmed.
+			"maxShipSize": 2,
+
+			# Base presence window, multiplied by the acting side's presenceDaysMult.
+			"presenceDays": 30,
+			# Commerce-tier feasibility (sec 14.14): enemyStrength(system) <= adjustedStrength *
+			# this, where adjustedStrength is vanilla's Misc.getAdjustedStrength(FP, source) -- the
+			# same units WarSimScript reports defence in. Station strength is excluded: raiders
+			# hunt shipping and never fight stations or ground battles. 1.0 = the op needs even
+			# odds or better, for every source. 0 disables the gate entirely.
+			"feasibilityStrengthMult": 1.0,
+			# Anti-hotspot respite, counted from when an op ENDS (not when it launches -- an op
+			# outlives 30-60 days easily, which is the bug this ordering avoids).
+			"systemCooldownDays": 60,
+			# Raiders withdraw (FAILURE) below this fraction of their launch FP.
+			"abortFraction": 0.5,
+			# Per-fleet FP ceiling. This is what stops one very large fleet clearing vanilla's
+			# strength-ratio test against an orbital station and bee-lining into it. 0 = vanilla.
+			"maxFleetFp": 45,
+
+			# false = loiter at the system centre (default, and the low-risk reading of "never
+			# touch planets"); true = sit on the focus market's orbit. Exposed for tuning.
+			"loiterOnFocusMarket": false,
+			# Keeps raiders off EVERY orbital station in the system. Vanilla's target-selection
+			# tally skips station-mode fleets, so no FP balance deters this -- the do-not-attack
+			# list is the only lever. Turn off only to compare against vanilla behaviour.
+			"suppressStationAttacks": true,
+			# Units. Raiders still take enemy comm relays, nav buoys and sensor arrays, as vanilla
+			# raids do -- EXCEPT one that is currently this close to an enemy market with an orbital
+			# station. Vanilla's war simulation orders the strongest faction in a system onto every
+			# enemy objective, and our raiders always arrive as the strongest; where a relay orbits
+			# next to the market (Tyle's Canaria Relay is 1,400 from Madeira) that order walked the
+			# whole group under the station's guns. Re-checked every half day, because orbits carry
+			# objectives toward and away from markets. Interdiction only; the planetary blockade is
+			# unaffected. 0 = off (vanilla behaviour). 3000 is a FIRST GUESS (Sean's ruling
+			# 2026-11-18); the log lists every objective's distance on arrival so it can be tuned.
+			"objectiveStationKeepOut": 3000,
+
+			# PER-KILL BOUNTY (spec sec 4.7). Credits the RAIDED side pays per frigate-equivalent
+			# raider destroyed, scaled by hull size and the player's share of the fighting, plus
+			# SYSTEM_BOUNTY_REWARD reputation with that side. It cuts both ways here: whichever
+			# side is the victim this cycle posts the bounty, so the player can pick a side per
+			# cycle or play both across cycles. 0 disables. Vanilla pays NOTHING for raid
+			# defense, which is why this exists at all (pillar 4, heroism).
+			"bountyPerFrigate": 3000,
+
+			# --- The exile_hl_interdiction condition ---
+			# Display name and description are PLACEHOLDERS pending the author text deliverable.
+			"conditionDelayDays": 5,   # days into the presence before shippers notice
+			"conditionDays": 45,       # backstop lifetime; the op normally lifts it on withdrawal
+			"accessibilityPenalty": 0.5,  # accessibility IS vanilla's import/export throttle
+			"importHitCount": 3,       # import-dependent commodities hit, on top of supplies+fuel
+			"importHitUnits": 2,       # availability units off each (vanilla trade losses are -2)
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 3 -- THE INCIDENT TABLE (spec sec 3.2.2 state 2) + its telegraph intel (sec 3.4)
+		# ---------------------------------------------------------------------------------
+		# An incident is the SPARK that opens a crisis cycle. It names an offender and a victim --
+		# both FACTIONS, never markets -- adds tension scaled by its own severity, and posts as
+		# rumour-then-confirmation intel. Nothing mechanical happens to any colony here; the
+		# victim's actual answer is the RETALIATION strike in surgicalStrike{} below.
+		#
+		# SEVERITY IS A MULTIPLIER ON tension.gains.perIncident (8), not a replacement for it.
+		# The shipped weighted-average severity is ~1.03 ((3x0.75 + 2x1.25 + 2x1.0 + 1x1.5) / 8),
+		# so the average incident is worth the ratified 8 and this pass rebalances nothing.
+		# See the sec 14.4 build log for the arithmetic on reaching hawkThreshold.
+		#
+		# THE MIDAN FALSE FLAG IS A PASS-7 ENTRY IN THIS SAME TABLE and is deliberately absent.
+		# When it lands it will bring its own state gate, cooldown and per-campaign cap; adding it
+		# needs no change to anything below.
+		"incidents": {
+			# OFF = the Pass-1 fallback: an unnamed incident, a coin-flip offender and the flat
+			# perIncident gain. The cycle still turns over; it just has no character.
+			"enabled": true,
+			# Post the rumour -> confirmation intel. Off keeps the mechanics and drops the beat.
+			"telegraphIntel": true,
+			# Days from the first hedged reports to the victim government's confirmation. Shorter
+			# than the shortest retaliation lag (10d) on purpose, so the player always reads the
+			# confirmation before the punitive op sails.
+			"confirmDays": 5,
+			# How long the incident stays on the intel board before it ends itself.
+			"intelDays": 60,
+
+			# Per-entry tuning, BY ID. This is a MERGE, not a replacement: table membership is
+			# code (Pass 7 adds to it in code), weights and severities are tuning. An id here that
+			# matches no entry logs a warning rather than failing silently.
+			# hegemonyOffenderChance: -1 uses cycle.incidentOffenderHegemonyChance (0.5); a value
+			# 0..1 is that entry's own SOFT bias. Never a hard lock -- a war where one side can
+			# never be at fault reads as scripted.
+			"types": {
+				# The common, cheap one: patrols traded fire on the frontier.
+				"border_clash":       { "enabled": true, "weight": 3, "severity": 0.75,
+				                        "hegemonyOffenderChance": -1 },
+				# A civilian convoy lost, with survivors testifying.
+				"convoy_destroyed":   { "enabled": true, "weight": 2, "severity": 1.25,
+				                        "hegemonyOffenderChance": -1 },
+				# A stop-and-search that ended in gunfire. Skewed toward the Hegemony because
+				# stop-and-search is its institutional habit -- but the League runs customs too,
+				# so one time in four the panicking boarding party is the League's.
+				"violent_inspection": { "enabled": true, "weight": 2, "severity": 1.0,
+				                        "hegemonyOffenderChance": 0.75 },
+				# The rare, expensive one: a raid hit civilian habitats.
+				"civilian_casualties":{ "enabled": true, "weight": 1, "severity": 1.5,
+				                        "hegemonyOffenderChance": -1 },
+			},
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 3 -- SURGICAL STRIKES on military industries (spec sec 4.3)
+		# ---------------------------------------------------------------------------------
+		# SURGICAL MEANS SURGICAL (ratified 2026-08-27, the sec 4.1/4.2 scope split): this op
+		# affects ONE market -- it puts that market's strongest military industry offline and
+		# reports the pressure to the deciv guard. No market condition, no neighbours, no
+		# system-wide effect. System-wide pressure is the BLOCKADE's signature (Pass 4).
+		#
+		# WHICH STATES:
+		#   RETALIATION -- exactly ONE per crisis cycle, mounted by the side the incident wronged
+		#                  against the side that caused it, sized by tension.
+		#   ESCALATION  -- counter-strikes on a cadence, either side, capped per side.
+		#
+		# NEVER POPULATION, and never a farming industry: selection runs through the military
+		# category test copied from the Omicron director (tag-based, with the vanilla ids as
+		# belt-and-braces). Industry disruption is verified deciv-safe -- it is a timer on an
+		# industry, not a hit to size or stability.
+		"surgicalStrike": {
+			"enabled": true,
+			# The two uses, separately switchable.
+			"retaliationEnabled": true,
+			# Spec sec 12 gives "ESCALATION becomes real" to Pass 4's blockades, but sec 4.3 names
+			# counter-strikes during ESCALATION as a use of THIS op. Shipped on so the path is
+			# exercised by Pass 3's own test matrix instead of arriving untested inside Pass 4.
+			"escalationCounterStrikes": true,
+			"escalationCadenceDays": 30,        # jittered +/-25%, scaled by timeScale
+			"escalationMaxConcurrentOpsPerSide": 1,
+
+			# !!! GUESSES. Every FP number here ships with a MEASUREMENT LINE and must be tuned
+			# FROM THAT LINE (spec sec 5; the assaultFp:800 lesson). Search the log for
+			# "Heg-League SURGICAL STRIKE LAUNCHED" -- it prints the op's FP and the measured live
+			# defense of the chosen system split into patrol strength and station strength -- and
+			# for "Heg-League strike feasibility" for every candidate considered and rejected.
+			# Calibration for reading those lines: the Ashen rehearsal lands at 120-160 FP against
+			# Tri-Tachyon defenses of 0-246 with stations reading ~98-120, while Heg/League Core
+			# systems measured 205-812 in the Pass-2 interdiction trace -- and unlike interdiction,
+			# this op has to go THROUGH the station rather than around it.
+			"spawnFpMin": 250,
+			"spawnFpMax": 400,
+			# "Sized by tension" (spec sec 3.2.2 state 3). Fraction ADDED to the rolled FP at the
+			# tension cap; nothing at the floor, linear between. 0 disables the scaling.
+			"tensionFpScale": 0.5,
+
+			# Ship-size cap. RAISED TO 3 (cruisers) BY AUTHOR RULING 2026-08-28, superseding the
+			# S6 destroyer cap FOR STRIKES ONLY (interdiction keeps 2). FP is unchanged, so
+			# cruiser strike groups are fewer, heavier ships. Note the accepted consequence: at
+			# cruiser size Hegemony groups can roll XIV Eagles/Falcons/Dominators, and dead ones
+			# are recoverable near the battle -- Sean's Vulture-Scavenger-style debris cleanup
+			# (separate work) is the planned mitigation; revisit only if farming shows up in play.
+			"maxShipSize": 3,
+			# Per-fleet FP ceiling. Higher than interdiction's 45, on the Ashen rehearsal's
+			# reasoning: a strike should arrive as a striking force, not as raiding packs.
+			"maxFleetFp": 90,
+			# ASSAULT-tier feasibility (sec 14.14): (system patrol strength + the target's STATION
+			# strength) <= adjustedStrength * this (vanilla's Misc.getAdjustedStrength(FP, source)).
+			# It counts the station because this op has to win the fight it starts. 0.37 = ~2.7:1
+			# real odds for every source (the measured median of the old gate). Higher = bolder
+			# strikes (0.67 = 1.5:1). 0 disables the gate entirely.
+			"feasibilityStrengthMult": 0.37,
+
+			# Anti-hotspot respite after the op ENDS. Shares interdiction's system cooldown key on
+			# purpose: two Exiles ops queueing up on one system is exactly what it exists to stop.
+			"systemCooldownDays": 60,
+			"abortFraction": 0.5,
+			# The strike group's window over the target, in days: live fleets strike as soon as the
+			# raid AI thinks it can win; at the END of the window the op resolves on strength in BOTH
+			# player-range branches (window-end fix 2026-09-28), so this is when an unresolved strike lands.
+			# Was a DEAD knob until 2026-09-19: vanilla overwrote it on arrival with its own 20-45d
+			# roll. The stage now restores it (doc sec 14.7).
+			"maxDays": 45,
+			# PER-KILL BOUNTY (spec sec 4.7), same mechanism as interdiction's. Here the STRUCK
+			# side pays -- for a retaliation strike that is the side that caused the incident, so
+			# the player can be paid to shield an offender from its own consequences. 0 disables.
+			"bountyPerFrigate": 3000,
+
+			# ON A LANDED STRIKE: the chosen industry goes offline for this long, taking the LONGER
+			# of any existing disruption rather than the sum (additive stacking is the
+			# drift-to-permanent path).
+			"disruptDaysMin": 45,
+			"disruptDaysMax": 90,
+			# Spec sec 4.6's EXTENDED BASELINE. A landed strike writes base * this; the victim's
+			# recovery convoys (recoveryConvoys{} below) then drip the extension back off.
+			# MOVED 1.0 -> 2.0 WITH PASS 6, in the commit that landed the convoys -- the previous
+			# comment here forbade raising it before they existed, and that condition is now met.
+			#
+			# THE INVARIANT this number now lives under: the strike sets base * mult, and relief
+			# can return AT MOST base * (mult - 1) * side.recoveryDaysMult. So the best case is
+			# design-normal (disruptDaysMin/Max above, healed in full by a Hegemony convoy that
+			# arrives and unloads unmolested) and the worst case is the full extension (the convoy
+			# is destroyed, or never comes). Nothing can ever heal BELOW the design-normal band.
+			# 1.0 remains legal and simply makes relief a no-op -- the budget is zero, the manager
+			# launches nothing and logs that it did so.
+			#
+			# !!! 2.0 IS A GUESS !!! It is the first number to revisit off measurement line 5,
+			# "Heg-League RELIEF OUTCOME", which says what fraction of the extension the war
+			# actually heals in play.
+			"extendedDisruptMult": 2.0,
+
+			# THE STRIKE PACKAGE (author ruling 2026-08-28, superseding the one-industry read and
+			# the old maxIndustries/industries keys). A landed strike hits up to one industry from
+			# EACH of three buckets, where present and not already disrupted:
+			#   (a) COMMAND        -- High Command > Military Base > Patrol HQ (falls back to any
+			#                         other tag-military industry for mod-added garrisons)
+			#   (b) GROUND DEFENSE -- Heavy Batteries > Ground Defenses
+			#   (c) WAR ECONOMY    -- FIRST present entry of economicIndustries, in list order.
+			# NEVER, regardless of config: Population, Spaceport/Megaport, Farming/Aquaculture,
+			# Light Industry, Commerce, Tech-Mining -- industries that cannot directly support a
+			# war effort are code-floor exempt and entries naming them are ignored with a warning.
+			#
+			# TENSION GATING (optional): each bucket beyond COMMAND unlocks when the meter at
+			# LAUNCH is at or above its threshold. 0 = always included (the shipped default: the
+			# full package on every strike, per the 2026-08-28 ruling). Example scaled setup, which
+			# keeps "limited war" readable at low heat: groundDefenseBucketTension: 40,
+			# economicBucketTension: 60 (the hawk line). The tier is snapshotted at launch -- a
+			# ceasefire cooling the meter mid-flight does not soften a strike already underway.
+			"groundDefenseBucketTension": 0,
+			"economicBucketTension": 0,
+			# Bucket (c) candidates, in strike-priority order. Reorder or remove to tune; entries
+			# on the never-list above are ignored.
+			"economicIndustries": ["fuelprod", "heavyindustry", "orbitalworks", "refining", "mining"],
+
+			# VISIBLE BEAT (author ruling 2026-08-28): after the strike lands, the group holds
+			# orbit over the struck market for this many days before turning for home, so a strike
+			# is something the player can SEE happen. Scaled by timeScale. 0 restores the old
+			# instant turnaround.
+			"orbitDays": 3,
+
+			# RECENT UNREST on a landed strike (author ruling 2026-08-28, superseding the zero-
+			# unrest read). Applied once, to the struck market only; Battered/Emergency-Measures
+			# markets are already exempt via the arrival re-check, and the exilesUnrestDecivGuard
+			# caps stack-up as everywhere else. 0 disables.
+			"unrestPoints": 2,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 4 -- SYSTEM BLOCKADES (spec sec 4.2, plan sec 14.9)
+		# ---------------------------------------------------------------------------------
+		# THIS IS WHAT MAKES ESCALATION REAL. A blockade holds EVERY jump point of a whitelisted
+		# system for weeks: the victim's colonies there take vanilla's Blockaded condition at full
+		# tiered force, everyone else's take the lighter exile_hl_blockade_collateral, and the
+		# pickets turn passing traffic away. It runs during ESCALATION and nowhere else -- one
+		# attempt per side the moment the surge begins, then more on cadenceDays while it lasts.
+		#
+		# !!! BLOCKADES CANNOT BE TESTED BELOW timeScale 1 (spec sec 9) !!! Fleet travel is real
+		# distance at real burn and does not compress, while the payload window does, so at a
+		# compressed clock the op never gets past TRAVEL. Test with timeScale 1 and
+		# testing.forceState 4; expect ~10-20 days of prepare plus travel before the gates shut.
+		#
+		# !!! EVERY NUMBER HERE IS A GUESS shipping with TWO measurement lines. Search the log for
+		# "Heg-League BLOCKADE LAUNCHED" (the formation that sailed, the strength estimate for it,
+		# the system's live defence and the gate that admitted it), "Heg-League blockade
+		# feasibility" (every candidate considered and rejected) and "Heg-League blockade HOLDING"
+		# (which penalty tier the blockade actually earned on arrival). TUNE FROM THOSE, not from
+		# intuition -- the assaultFp:800 lesson.
+		"blockade": {
+			"enabled": true,
+
+			# One attempt per side at the instant ESCALATION begins. Keyed on the director's cycle
+			# counter, so a save/load or a forceState pin cannot re-arm it.
+			"launchAtEscalationEntry": true,
+			# Days between further attempts inside the window, jittered +/-25%, scaled by timeScale.
+			"cadenceDays": 30,
+			"maxActivePerSide": 1,
+			# Spec sec 3.2.4's "simultaneous blockades" under a General Engagement.
+			"generalEngagementMaxActivePerSide": 2,
+
+			# ONE ENTRY PER FLEET, in vanilla difficulty points: an anchor plus two pickets. This
+			# is the ONLY size control on this pipeline -- FleetCreatorMission consumes these
+			# numbers directly, so heavier gate-holders means bigger entries, and there is no
+			# maxShipSize lever (ruling R7 accepts uncapped blockade fleets: cruisers and capitals
+			# holding a jump point are earned wrecks, not farmed ones). The Ashen rehearsal's
+			# blockade ran [6,3,3]; [6,4,4] is a guess toward "a real formation".
+			"fleetSizes": [6, 4, 4],
+
+			"prepDays": 3,
+			# Base window with the gates held, MULTIPLIED by the acting side's presenceDaysMult
+			# (decision D7 -- one knob fewer): Hegemony 1.25 -> 56d, League 0.8 -> 36d.
+			"payloadDays": 45,
+
+			# Vanilla's own default, and NOT flat: BlockadeFGI scales it by relative strength --
+			# below 0.75x the system's defenders it is ZERO, below 1.25x it is half, above that
+			# full. So a blockade only bites where the blockader decisively outguns the defence.
+			"accessibilityPenalty": 0.6,
+			# Damage fraction at which the blockade counts as broken off. CORRECTED 2026-09-28 (war
+			# doc sec 14.15.12): vanilla DOES have a strength abort -- FleetGroupIntel aborts a group
+			# whose LIVE surviving FP falls below 33% of what it spawned (groupAbortsMissionFPFraction
+			# 0.33, i.e. more than 67% losses) -- and that is what actually ends a blockade fought on
+			# screen, because vanilla never writes route damage for live blockade fleets. Set to 0.67
+			# by Sean's ruling so this value and vanilla's live break agree (it only ever reads route
+			# damage). The victory bonus rewards the break at vanilla's threshold either way.
+			"abortFraction": 0.67,
+
+			# FEASIBILITY (decision D3): estimatedStrength(fleetSizes) * this must be at least the
+			# system's live enemy strength. Station strength is EXCLUDED -- gate-holders never
+			# fight a station, and the code actively keeps them off it. 0 disables the gate
+			# entirely (vanilla behaviour), which is what the knob is really for: comparing.
+			# NOTE (spec sec 14.9.1): getEnemyStrength counts everything hostile to the blockader,
+			# so Isirah's pirate patrols and the Kapteyn battlestation inflate that system's
+			# defence against a Hegemony blockade. The log line says by how much; do not pre-tune.
+			"feasibilityMult": 1.25,
+			# D3, Sean's amendment: blockades are uncommon, so rather than skip a launch the
+			# manager first tries a BIGGER formation -- fleetSizes multiplied uniformly in 0.1
+			# steps up to this cap. Only if the cap still fails is the target rejected and logged.
+			# 1.0 = never scale up (skip instead).
+			"fleetSizesMaxMult": 1.5,
+
+			# Anti-hotspot respite counted from when the op ENDS. Longer than the other two ops'
+			# 60: a system that has just had its gates shut for two months deserves the break.
+			# Shares the $exiles_hl_op_cooldown key with interdiction and strikes on purpose.
+			"systemCooldownDays": 90,
+
+			# --- COLLATERAL (decision D2, RULED 2026-09-20) ---
+			# The victim's markets take vanilla Blockaded at full tiered force. Every OTHER market
+			# in the system takes exile_hl_blockade_collateral instead -- lighter, its own id, its
+			# own tooltip. Nothing in vanilla's apply/unapply path is overridden.
+			# WHERE IT ACTUALLY SHOWS UP today: Kapteyn Starworks (Isirah, Pirates) and Ailmar
+			# (Westernesse, Independent). Tyle, Naraka and Samarra are all-one-faction, so there
+			# every market is the victim's and takes the vanilla condition. Refugee, strain,
+			# player and Battered markets are guarded out in code and none exists in the five.
+			"collateralEnabled": true,      # false = pure vanilla (victim-faction markets only)
+			"collateralAccessibilityPenalty": 0.3,   # vs vanilla's 0.6 on the victim
+			# Follow the blockade's own 0 / half / full tier, so a blockade too weak to hurt the
+			# League does not hurt the bystanders either.
+			"collateralScalesWithTier": true,
+			# Self-expiry after the LAST refresh. The blockade refreshes it on vanilla's own
+			# 0.1-0.3 day tick, so in normal operation this never fires: it is the ORPHAN
+			# BACKSTOP, so a blockade that is console-removed or otherwise lost can never leave a
+			# permanent penalty behind. Deliberately NOT scaled by timeScale -- it is measured
+			# against that engine tick, not against the war's fiction.
+			"collateralExpiryDays": 5,
+
+			# D6: hidden while preparing and travelling, visible from the moment the gates are
+			# held (or the first time the player fights one of the fleets). Unlike the Ashen
+			# blockade, which hid entirely because its companion raid's intel spoke for both, this
+			# op IS the listing -- vanilla's BlockadeFGI intel with its assessment section.
+			"hiddenUntilArrival": true,
+			# Keeps blockade fleets off EVERY orbital station in the system, the victim's and any
+			# third party's. Vanilla's target-selection tally skips station-mode fleets, so no FP
+			# balance deters this; the do-not-attack list is the only lever. Off to compare.
+			"suppressStationAttacks": true,
+
+			# PER-KILL BOUNTY (spec sec 4.7), the same mechanism interdiction and strikes use:
+			# the BLOCKADED side pays per frigate-equivalent blockader destroyed, scaled by hull
+			# size and the player's share of the fighting, plus SYSTEM_BOUNTY_REWARD reputation.
+			# No payout when the player fought on the blockading side. 0 disables.
+			"bountyPerFrigate": 3000,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# "BREAK THE BLOCKADE" VICTORY BONUS (war doc sec 14.15, ratified 2026-09-28)
+		# ---------------------------------------------------------------------------------
+		# A second-tier reward ON TOP of the per-kill bounty, paid by the blockaded/squeezed side
+		# when a system blockade or planetary squeeze is BROKEN (driven off through losses) and
+		# the player did enough of the damage. Share = player-credited FP destroyed / all FP the
+		# op lost (every battle, defenders and Nexerelin task groups included), measured at the
+		# break. Below shareFloor: nothing. shareFloor..shareFull: pro-rated as share/shareFull.
+		# At or above shareFull: full. Paid with the transponder on OR off (ruled). Reputation
+		# with the payer: vanilla COMBAT_HELP_MAJOR (partial) / COMBAT_HELP_CRITICAL (full).
+		# Log: search "VICTORY BONUS".
+		"victoryBonus": {
+			"enabled": true,
+			"blockadeBase": 60000,       # credits at the reference size and a full share
+			"squeezeBase": 40000,
+			"refPointsBlockade": 14,     # blockade size reference: sum of fleetSizes ([6,4,4])
+			"refFpSqueeze": 330,         # squeeze size reference: launch FP (Run 4 median)
+			"maxSizeMult": 2.0,          # size multiplier clamp (lower clamp 0.5, in code)
+			"shareFloor": 0.2,
+			"shareFull": 0.5,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 6a -- PLANETARY BLOCKADES, "the squeeze" (spec sec 4.4, plan sec 14.11)
+		# ---------------------------------------------------------------------------------
+		# THE RETALIATION STATE'S OTHER PUNITIVE OPTION. Where a surgical strike takes one
+		# military industry offline, a squeeze parks a destroyer-capped cordon over ONE colony for
+		# weeks: that market alone takes exile_hl_planetary_blockade -- accessibility down and
+		# player buy prices up -- until the cordon withdraws or is driven off.
+		#
+		# WHICH STATES: RETALIATION only. Each crisis cycle rolls ONE punitive op type against
+		# opWeights.surgical vs opWeights.planetary; if the rolled type has no legal target the
+		# other type is tried once (retaliationFallbackToOtherType), and then the crisis passes
+		# without a punitive op. There is deliberately no ESCALATION cadence for squeezes --
+		# see escalationSqueezes below.
+		#
+		# WHAT THE FLEETS ACTUALLY DO (decision D80.2): they hold station near the anchor world and
+		# fight hostile MOBILE fleets that come to them. They never approach a planet (canRaid is
+		# always false) and never engage any orbital station, the victim's or a third party's --
+		# suppressStationAttacks is the same do-not-attack lever interdiction uses, and vanilla's
+		# target-selection tally gives no other way to deter it. The fiction of "attacking the
+		# station" in spec sec 4.4 is carried by the condition's prose, not by a fight; making it
+		# literal would be a different op (FGBlockadePlanetAction) and a separate author ruling.
+		#
+		# TARGET POOL: planetaryBlockadeWhitelistMarkets below, intersected live with "owned by
+		# the cycle's offender", the standard R6 guards, and the shared system cooldown. A system
+		# already hosting ANY live Exiles operation is excluded, so this condition can never
+		# coexist with exile_hl_interdiction or a Heg-League Blockaded in the same system.
+		#
+		# !!! EVERY NUMBER HERE IS A GUESS shipping with measurement lines. Search the log for
+		# "Heg-League SQUEEZE LAUNCHED" (FP, the measured live defence split into patrol strength
+		# and the anchor's STATION strength -- both gated since the 2026-09-20 ruling -- and the
+		# gate that admitted it) and "Heg-League squeeze
+		# feasibility" (every candidate considered and rejected). Tune from those.
+		"planetaryBlockade": {
+			"enabled": true,
+
+			# Sized by tension exactly like the strike it replaces (spec sec 3.2.2 state 3), same
+			# formula, SAME band: RULED by Sean 2026-09-20 (late) that the squeeze FIGHTS THE STATION
+			# ("attack station and fleets in orbit" is literal), so it has to be able to win that fight.
+			"spawnFpMin": 250,
+			"spawnFpMax": 400,
+			"tensionFpScale": 0.5,
+
+			# 3 = cruisers, the STRIKE's cap. D80.3 recommended the destroyer cap; Sean superseded it
+			# on 2026-09-20 when he ruled the squeeze fights the station -- a destroyer cordon cannot
+			# crack a size-6 station. Accepted consequence: cruiser wrecks near the anchor; Sean's
+			# stated mitigation is the Refugee Salvage Expeditions, which claim the best wrecks first.
+			"maxShipSize": 3,
+			# Per-fleet FP ceiling, the strike's: a cordon that fights a station arrives as a force.
+			"maxFleetFp": 90,
+
+			# Base presence window, multiplied by the acting side's presenceDaysMult
+			# (Hegemony 1.25 -> 50d, League 0.8 -> 32d).
+			"presenceDays": 40,
+			# Days into the presence before the cordon starts turning traffic away. Its own knob
+			# rather than interdiction's, so the two presence ops can be compared.
+			"conditionApplyDay": 5,
+			# The cordon withdraws (FAILURE) below this fraction of its launch FP.
+			"abortFraction": 0.5,
+			# ASSAULT-tier feasibility since the 2026-09-20 ruling, in strength units (sec 14.14):
+			# (system patrol strength + the ANCHOR's station strength) <= adjustedStrength * this
+			# (vanilla's Misc.getAdjustedStrength(FP, source)) -- the strike's shape and value,
+			# because the squeeze fights the station. 0.37 = ~2.7:1 real odds for every source.
+			# Read the feasibility lines before tuning. 0 disables the gate entirely.
+			"feasibilityStrengthMult": 0.37,
+			# Anti-hotspot respite counted from when the op ENDS. Shares the $exiles_hl_op_cooldown
+			# key with interdiction, strikes and blockades on purpose.
+			"systemCooldownDays": 60,
+
+			# --- The exile_hl_planetary_blockade condition ---
+			# Display name and description are PLACEHOLDERS pending the author text deliverable.
+			# -0.5 is the ratified figure the three sibling presence conditions already use:
+			# accessibility IS vanilla's import/export throttle, and -0.2 proved too weak to choke
+			# imports in the BF playtest.
+			"accessibilityPenalty": 0.5,
+			# Multiplier on what the PLAYER pays for every commodity bought here while the cordon
+			# holds. Player price mods never touch the NPC economy sim. Tuned down from Price
+			# Spikes' 1.5 because a 120-day racket and a 40-day cordon should not cost the same.
+			"playerBuyPriceMult": 1.4,
+			# ORPHAN BACKSTOP ONLY (Ashen Ruling F discipline): presenceDays x 1.25 + 30. The stage
+			# lifts the condition on withdrawal or abort, so in normal operation this never fires.
+			"conditionExpiryDays": 80,
+
+			# FALSE (Sean, 2026-09-20): the squeeze engages the orbital station -- beating it puts the
+			# station offline for vanilla's repair window. Its own flag, not interdiction's. True
+			# restores the hands-off cordon for comparison. Either way the cordon NEVER attacks any
+			# OTHER market's station in the system (2026-10-04 fix: the Sphinx squeeze had destroyed
+			# Tigra City's station, a fight its launch gate never counted).
+			"suppressStationAttacks": false,
+			# Hidden while assembling and travelling; the op posts the moment the cordon arrives.
+			"hiddenUntilArrival": true,
+			# PER-KILL BOUNTY (spec sec 4.7), the same mechanism the three sibling ops use: the
+			# SQUEEZED side pays per frigate-equivalent squeezer destroyed. 0 disables.
+			"bountyPerFrigate": 3000,
+
+			# D80.1 -- the empty-pool fallback. tryLaunchRetaliation() claims the cycle before it
+			# attempts anything, so an op-type roll that lands on a pool with no legal target would
+			# otherwise cost the cycle its entire punitive response. ON: roll the type, try it, and
+			# on an empty pool try the OTHER type exactly once before declaring the crisis
+			# contained. One extra economy scan per cycle at most, and the "one punitive op per
+			# cycle" invariant is preserved exactly. false restores the strict reading.
+			"retaliationFallbackToOtherType": true,
+			# D80.1c -- no ESCALATION cadence for squeezes in v1 (a fourth concurrent op type is
+			# the dogpile the guardrails exist to prevent). The reserved "escalationSqueezes"
+			# switch was removed 2026-11-08: nothing read it.
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 6b -- STRIKE-TRIGGERED RECOVERY CONVOYS (spec sec 4.6, ruling R16)
+		# ---------------------------------------------------------------------------------
+		# THE OTHER HALF OF surgicalStrike.extendedDisruptMult, and the reason it was allowed to
+		# leave 1.0. When a strike lands, the victim's government notes the wound and -- after a
+		# bureaucratic lag -- sends a civilian relief convoy from a NEARBY same-faction spaceport.
+		# The convoy sits in orbit for unloadDays and drips the disrupted industries' timers back
+		# down by the EXTENSION the strike added, never below minRemainingDays.
+		#
+		# THE BUDGET IS THE EXTENSION, COMPUTED AT STRIKE TIME, not a config day-count:
+		#   reliefDays = rolledBaseDays * (extendedDisruptMult - 1)
+		# That makes spec sec 4.6's promise -- "a full, uninterrupted convoy schedule lands the
+		# effective downtime at design-normal" -- true BY CONSTRUCTION, and it survives any later
+		# change to disruptDaysMin/Max or extendedDisruptMult without a second knob drifting out
+		# of sync. At the shipped 45-90 x 2.0 the wound is 90-180 days and the budget is 45-90.
+		#
+		# DENIAL IS THE POINT (spec sec 4.6): nothing is pre-paid and nothing is written on death,
+		# so a convoy killed mid-unload denies exactly the remainder. ONE convoy per strike --
+		# destroyed means denied, and no replacement is ever sent for that wound.
+		#
+		# THE PLAYER SEES NO INTEL (decision D80.7): the convoy is visible in space, the industry
+		# tooltip's disruption timer is the tell, and a proximity-gated arrival message fires when
+		# the player is in the system to see it. Pass 8 is where the player gets a reason to care.
+		#
+		# Measurement lines: "Heg-League RELIEF RECORDED" (the extended-baseline arithmetic),
+		# "Heg-League RELIEF CONVOY LAUNCHED", and "Heg-League RELIEF OUTCOME" -- the last is what
+		# extendedDisruptMult is tuned from.
+		"recoveryConvoys": {
+			"enabled": true,
+
+			# Concurrent relief convoys, both sides together. Ashen relief runs 2, refugee convoys
+			# 1. A strike whose record comes due while the cap is full simply waits its turn.
+			"maxActive": 2,
+			# The bureaucratic lag between the wound and the convoy sailing. The victim has to
+			# notice, argue about it, and load. Rolled per record, scaled by timeScale.
+			"lagDaysMin": 20,
+			"lagDaysMax": 45,
+			# LOCKED by spec sec 4.6 ("a ~10-day unload orbit", author). The whole budget is
+			# delivered evenly across this window, so it is also the drip rate's denominator.
+			"unloadDays": 10,
+			# THE RECOVERY FLOOR: a drip never takes an industry's disruption below this. Stops
+			# double relief on a twice-struck market from over-healing, and stops a convoy
+			# handing the victim a working shipyard on the day it arrives.
+			"minRemainingDays": 5,
+
+			# BOUNDS (CLAUDE.md sec 7 -- bound everything that accumulates). Outstanding relief
+			# records waiting for a convoy; the oldest is dropped with a permanent log line when a
+			# new one arrives at the cap. A bounded convoy count with an unbounded ledger is a
+			# save-bloat path, which is why these are two separate numbers.
+			"ledgerMaxRecords": 8,
+			# A record nobody could ever service -- the cap stayed full, the market decivilised --
+			# is dropped and logged after this long. Scaled by timeScale.
+			"recordExpiryDays": 400,
+			# Fleet timeouts. NOT scaled by timeScale: they bound real fleet travel, which is
+			# physical distance at real burn and does not compress (the Ashen relief precedent).
+			"travelTimeoutDays": 180,
+			"departTimeoutDays": 20,
+
+			# CONVOY COMPOSITION -- REBUILT in Pass 7 step 7f-2 (ruled by Sean, 2026-11-03). The relief rides in
+			# freighterCount explicitly added freighterVariant hulls (3 Colossi). Each carries an EQUAL SHARE: the
+			# daily drip scales with the relief freighters still alive, so losses on the way in or mid-unload deny
+			# their share. The sending faction's ESCORT is still drawn by vanilla's fleet factory from combatFp.
+			# freighterFp/tankerFp/transportFp are 0: vanilla's freighter roll ignores the size cap, which is how
+			# Atlases (capital hulls) got in. Combat freighters appear only if the escort roll happens to give them.
+			"combatFp": 10,
+			"freighterFp": 0,       # was 24
+			"tankerFp": 0,          # was 6
+			"transportFp": 0,       # was 8
+			"freighterVariant": "colossus_Standard",
+			"freighterCount": 3,
+			# REAL CARGO, so a player who destroys a convoy loots it (vanilla pays the share of capacity lost).
+			# d-mods roll normally on the Colossi, so the load stays under the Compromised Storage ceiling:
+			# 900 cargo x 0.75 = 675. 500 per Colossus, 1500 per convoy (Sean). The holds drain day by day as
+			# the convoy unloads and are empty when it leaves.
+			"cargoPerFreighter": 500,
+			# Manifest shares (Sean: 30/40/15/15). Per Colossus: 150 / 200 / 75 / 75.
+			"cargoShares": { "supplies": 0.30, "food": 0.40, "heavy_machinery": 0.15, "metals": 0.15 },
+
+			# Proximity-gated campaign message when a convoy reaches the struck market. The
+			# refugee-convoy precedent, live-tested and accepted 2026-08-19: it only fires when the
+			# player is in the system AND can see the fleet. false = entirely silent.
+			"arrivalMessage": true,
+
+			# D80.7 / spec sec 11 item 3 -- the informational "Relief Effort" market condition,
+			# applied at orbit start and removed at departure. Zero mechanical effect; it exists
+			# only to make the repair legible in the market panel. Was planned default OFF; Sean
+			# switched it ON 2026-09-20 (late). Prose is PLACEHOLDER author material.
+			"reliefEffortCondition": true,   # ON (Sean, 2026-09-20): the zero-effect "relief under way" marker
+
+			# TEST: per-record and per-drip lifecycle lines. False in production (ruled 2026-11-08).
+			"debugMessages": false,
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 5 -- THE PLAYER-FACING INTEL BEATS (spec sec 3.4)
+		# ---------------------------------------------------------------------------------
+		# Spec sec 3.4 names exactly three telegraphs: the incident (rumour -> confirmation ->
+		# contained, shipped in Pass 3 under incidents{} above), "ceasefire talks convened" and
+		# "ceasefire announced" (one intel, two beats, below), plus sec 3.2.4 A's "named operation
+		# in the intel" for a General Engagement. Internal meter movements are NEVER player-facing.
+		#
+		# VOCABULARY IS RULED (spec sec 3.2.5 ruling 3, Sean 2026-09-13): what the doves broker is a
+		# TEMPORARY CEASEFIRE. Never a "summit", never "peace" -- peace talks are Phase-2 quest
+		# content (the secret envoy). The shipped prose obeys this; if you rewrite it, keep it.
+		#
+		# EVERY STRING THESE BEATS SHOW IS PLACEHOLDER (spec sec 11 item 2 / R12 -- player-facing
+		# text is an author deliverable). Turning a beat off changes NOTHING mechanical: the outcome
+		# roll, the tension cuts, the states and the durations are all identical either way.
+		"intel": {
+			# "Ceasefire talks convened" + "ceasefire announced" (holds in full / in part /
+			# collapses). Posted at the single transition into POLITICAL INTERVENTION.
+			"ceasefireEnabled": true,
+			# Days the ceasefire intel lingers AFTER its outcome beat before it ends itself.
+			# A hard backstop of cycle.interventionDays + this also runs from the moment it is
+			# posted, so an intel whose director was disabled mid-cycle still expires.
+			# Scaled by timeScale, like every other duration here.
+			"ceasefireIntelDays": 60,
+
+			# The General Engagement beat (spec sec 3.2.4 A). Rare by design -- it only exists when
+			# tension clears generalEngagementThreshold or after generalEngagementHotCycles hot
+			# cycles in a row, and per R1 that is meant to be rare-to-never.
+			"generalEngagementEnabled": true,
+			# Days it lingers after the closing beat; backstop is cycle.generalEngagementDays +
+			# this from posting. Scaled by timeScale.
+			"generalEngagementIntelDays": 30,
+			# THE NAMED OPERATION. Deliberately ONE name, not a per-side pair: a General Engagement
+			# is both sides committing at once, so there is no single offender to name it after.
+			# PLACEHOLDER pending the author's text pass; the intel title carries the number
+			# ("General Engagement #2") and this string is the designation in the prose.
+			"generalEngagementOperationName": "Operation PLACEHOLDER",
+		},
+
+		# WAR WEARINESS from player kills (spec sec 4.7). Added to whichever side owned the ships
+		# the player destroyed, per battle (ruled 2026-08-27). Block-level rather than inside
+		# interdiction{} because every op type pays into the same ledger. 0 disables.
+		"wearinessPerFpDestroyed": 0.05,
+
+		# ---------------------------------------------------------------------------------
+		# WAR GEOGRAPHY (spec sec 2, ruling R6)
+		# ---------------------------------------------------------------------------------
+		# NOTHING here is a hardcoded target list. Ownership is queried LIVE every cycle (R6c) --
+		# core worlds change hands, especially under Nexerelin -- so a market that changes hands
+		# simply leaves the pool, and a system-placement retune cannot invalidate anything.
+		#
+		# R6a -- CAPITAL EXEMPTION IS SYSTEM-LEVEL. All of Aztlan and all of Thule are
+		# untargetable; Coatl and Thule's minor markets ride along. This is also what keeps both
+		# sides' main ship production out of the war (spec sec 1.2). Exempt systems remain valid
+		# op SOURCES -- it is a targeting rule, not a basing rule. Matched against a system's id
+		# AND its base name, case-insensitively; the first-boot log line
+		# "Heg-League geography:" reports OK/UNRESOLVED for every id here so a typo is visible
+		# immediately instead of silently un-exempting a capital.
+		"exemptSystems": ["aztlan", "thule"],
+
+		# R6b -- the five refugee strain markets are NEVER a direct victim of any op. (The
+		# refugee FACTION is separately and unconditionally shielded in code, not config.)
+		"excludedMarkets": ["asharu", "mairaath", "port_tse", "salamanca", "new_maxios"],
+
+		# R6c author ALLOW-list. EMPTY = the whole non-exempt enemy pool is fair game, which is
+		# the shipped behaviour. Listing ids here narrows target selection to exactly those
+		# markets -- a tuning knob, not a whitelist requirement.
+		# NOTE: this is NOT the blockade whitelist. That one (blockadeWhitelistSystems /
+		# planetaryBlockadeWhitelistMarkets, R6b) is below; interdiction and strikes do not read
+		# it, and blockades read ONLY it.
+		"allowedMarkets": [],
+
+		# ---------------------------------------------------------------------------------
+		# R6b -- THE AUTHOR'S BLOCKADE WHITELISTS (delivered 2026-08-27, REVISED by Sean
+		# 2026-09-20; the revision is canon and is transcribed in spec sec 14.9.1)
+		# ---------------------------------------------------------------------------------
+		# Unlike allowedMarkets, these are true WHITELISTS: a blockade may be aimed at a system on
+		# the first list and NOWHERE else. Blockading a capital system is a blatant act of war --
+		# the pre-game one started this mess and a second by either side would mean all-out war --
+		# so Aztlan and Thule are absent by ruling, with R6a as the belt-and-braces in code.
+		#
+		# ONE MERGED LIST, not per side (decision D1): the list names acceptable WAR ZONES, not
+		# owners. Ownership is still queried live, so if the League ever takes a Hegemony world
+		# under Nexerelin the war follows the market with no config change. An EMPTY list means no
+		# blockade can launch anywhere.
+		#
+		# The author's own per-side intent, for reference:
+		#   Hegemony blockades League systems: Isirah, Tyle, Westernesse
+		#   League blockades Hegemony systems: Naraka, Samarra
+		# Near parity at 3 : 2, so opWeights.blockade (3 : 1) is what decides who blockades more.
+		# Rulings taken while revising (Sean, 2026-09-20): Valhalla stays OFF (all-Hegemony, the
+		# Ragnar quest chain, and the planned base of the Hegemony's war admiral -- the Raesvelg
+		# PLANETARY squeeze is the scalpel that fits there instead); Arcadia moved to the market
+		# list (only one Hegemony market there, so a system blockade was overkill); Samarra added
+		# knowing Sphinx is the sensitive Hegemony fuel asset; Naraka added with the Nachiketa
+		# fuel wound acknowledged. The first-boot "Heg-League geography:" line reports OK or
+		# UNRESOLVED for every id below, so a typo shows up immediately.
+		"blockadeWhitelistSystems": ["isirah", "tyle", "westernesse",   # Hegemony action
+		                             "naraka", "samarra"],              # League action
+
+		# PASS 6 READS THIS ONE; Pass 4 only reports whether the ids resolve. Planetary blockades
+		# are a squeeze on ONE colony, which is why systems that are wrong as a whole are right as
+		# a market: Jangala shares Corvus with the refugee station and Asharu, Citadel Arcadia is
+		# Arcadia's only Hegemony market, Raesvelg is the scalpel that only lands when the admiral
+		# is away. Expect ancyra_market=UNRESOLVED under a start that never completes the Galatia
+		# tutorial -- Ancyra is created outside the economy and joins on completion.
+		"planetaryBlockadeWhitelistMarkets": ["athulf", "cibola", "fikenhild", "laicaille_habitat",
+		                                      "madeira", "suddene", "yesod",         # Heg action
+		                                      "ancyra_market", "arcadia_station", "jangala",
+		                                      "nachiketa", "raesvelg", "sphinx", "yama"], # League
+
+
+		# R6c pool weighting: weight = 1 / (1 + distanceLY * this). Closer is likelier, so ops
+		# concentrate where the two powers' spaces meet without a border ever being hardcoded.
+		# 0.10 is the Black Fleet's playtested value (0.25 made the nearest fringe dominate).
+		"distanceFalloff": 0.10,
+
+		# ---------------------------------------------------------------------------------
+		# NEXERELIN PREMISE PROTECTION (spec sec 7.2-7.3; rulings R10 + R11)
+		# ---------------------------------------------------------------------------------
+		# Nexerelin is ON OUR SIDE at t=0 -- it pre-seeds Heg/League hostility and skews their
+		# diplomacy toward war. What it lacks is a permanent lock: one "Star-crossed Lovers"
+		# random event carries no rep limit and can move the pair out of hostility in a single
+		# roll, silently deleting this director's premise.
+		#
+		# EVERY suppression below is a PLAYER OPTION and every one is REVERSIBLE: switch it off,
+		# load the game, and Exiles removes what it installed. Switches off means a GRACEFUL
+		# RIDE, not sabotage -- with selfHealHostility off the director idles while the pair is
+		# at peace and resumes if war resumes. It never fights a peace the player allowed.
+		#
+		# Layer B1 (a shipped merged hegemony.json) was DROPPED: a static file cannot honour a
+		# runtime switch, and B2 alone already trips canCeasefire false.
+		#
+		# NAMED SIDE EFFECT, accepted 2026-08-26: once canCeasefire is false for this pair, the
+		# war stops counting toward either faction's Nex war weariness, leaving both somewhat
+		# more willing to start OTHER wars. That pulls in the "Sector is Breaking" direction,
+		# but it is a sector-wide behaviour change -- named here so it is a decision, not a
+		# playtest surprise. Turn relationPin off if you would rather not have it.
+		#
+		# With Nexerelin absent this whole block is inert except selfHealHostility, which is
+		# pure vanilla and costs two faction lookups per tick.
+		"nex": {
+			# PLAYER OPTION -- B2, the runtime max-relationship pin. The only lever that works
+			# in Nex's FLATTEN start-relations mode. Off = removed on the next load.
+			"relationPin": true,
+			# PLAYER OPTION -- B3, the self-heal backstop. Zero Nexerelin dependency; it also
+			# guards against any other source of an unexpected Heg/League peace.
+			# Off = the director rides a Nex peace and idles (logged, once per 30 days).
+			"selfHealHostility": true,
+			# PLAYER OPTION -- R11 conquest shields. $nex_npc_no_invade blocks NPC invasion,
+			# raid, saturation bombardment and rebellion by ALL NPC parties (verified with the
+			# Nex author 2026-08-27), while leaving PLAYER invasion allowed -- unlike
+			# $nex_uninvadable. The war's poles cannot be removed by an NPC hand; only by you.
+			# Off = our keys removed on the next load.
+			# NOTED COST, accepted: in a long campaign this handful of worlds never falls while
+			# the rest of the sector churns.
+			"conquestShields": true,
+			# B2's flat modifier. Nex computes min(mod1, mod2) + baseMax and clamps at -1, so
+			# any value at or below -1.51 holds canCeasefire false against Nex's own canonical
+			# -0.51 pin. -1.6 is the ratified value. Pinning ONE direction is enough.
+			"pinValue": -1.6,
+			# R11: the two capitals ONLY, for now. The false-flag permanent-strike targets
+			# (Eventide's solar array is candidate #1) belong here too, but that list is an
+			# AUTHOR DELIVERABLE and is deliberately absent until Sean's merged list lands --
+			# shipping a guess would silently make a world unconquerable that he never chose.
+			# The director is otherwise flip-tolerant by design: it queries market ownership
+			# live every cycle, so a market that changes hands just leaves the target pool.
+			# An explicit empty list [] shields nothing; removing an id unshields it on load.
+			# Pass 7 step 7g (Sean, 2026-11-07): the three Midan strike targets join the capitals, so an
+			# NPC invasion cannot take a rung's target out from under the ladder. The Black Fleet anchors
+			# and Midan's home are deliberately NOT shielded (a pirate base that can fall is better fiction).
+			"conquestShieldMarkets": ["chicomoztoc", "kazeron", "arcadia_station", "sphinx", "eventide"],
+		},
+
+		# ---------------------------------------------------------------------------------
+		# PASS 7 -- MIDAN'S FALSE-FLAG LADDER (war doc sec 6.1; docs/EXILES_PASS7_BUILD_PLAN.md)
+		# ---------------------------------------------------------------------------------
+		# STEP 7d-2 LAUNCHES RUNG 1 ONLY (strike.maxLaunchRung): the module tracks readiness,
+		# scores the opportunity, measures the Strike Force against all three targets, and sends
+		# it when the score clears the bar and every hard rail holds. Rungs 2-3 keep the
+		# log-only "WOULD LAUNCH" line until step 7e builds their payloads.
+		"midan": {
+			"enabled": true,                 # PLAYER OPTION: false keeps the war but stops Midan
+			# READINESS (ruled 2026-10-19): first readiness, then a rebuild after each rung --
+			# longer after a failure. Current pace ~1/3/5 years; the stretch pass plans 730/913.
+			"firstReadyDays": 365,
+			"rebuildDays": 730,
+			"rebuildFailedDays": 1095,
+			# FEASIBILITY (ruled 2026-10-11): the fleet must reach strikeMarginMult x the target
+			# system's measured defence (live patrol strength vs the League + the target's
+			# station), under fpCeiling (checked per fleet: the main fleet and each escort).
+			# Since 7d-1 the Strike Force is composed in memory and measured with vanilla's own
+			# fleet strength; fleetFpEstimate (the 7c guess) only stands in if that fails.
+			"strikeMarginMult": 2.0,
+			"fpCeiling": 320,                # per fleet; 300 -> 320 (2026-11-01): the main fleet is now 302 FP
+			"fleetFpEstimate": 277,
+			# THE STRIKE FORCE (plan sec 1.5a; rulings 2026-10-20/24/25). Variant ids from
+			# data/variants/exiles_midan/; counts per hull. Officers go on the listed hulls (one
+			# per entry), generated by vanilla's officer generator at officerLevel.
+			"strikeForce": {
+				"fleetName": "Strike Force",
+				# The fleet carrying the Ajax (Sean, 2026-11-03): shown exactly as written, with NO "Persean League"
+				# prefix (its tooltip still shows the League flag). Escorts, and a main fleet rebuilt after the Ajax
+				# is lost, use fleetName above. "" = fleetName for this fleet too.
+				"flagshipFleetName": "Strike Force Ajax",
+				"flagshipVariant": "exiles_midan_conquest_ajax",
+				"flagshipName": "Ajax",          # shown with the League prefix: PLS Ajax
+				# 2026-11-01 (Sean): + a support-fleet Conquest and a third Gryphon, so the Ajax's fleet is at
+				# least as big as an escort (302 FP vs 272). The added Conquest is officered, as in the escorts.
+				"roster": {                      # the main fleet, flagship excluded (26 ships, 302 FP with it)
+					"exiles_midan_conquest_standard": 1,
+					"exiles_midan_champion_assault": 2,
+					"exiles_midan_eagle_assault": 3,
+					"exiles_midan_falcon_attack": 3,
+					"exiles_midan_gryphon_standard": 3,
+					"exiles_midan_hammerhead_balanced": 4,
+					"exiles_midan_sunder_assault": 3,
+					"exiles_midan_omen_pd": 3,
+					"exiles_midan_phaeton_standard": 1,
+					"exiles_midan_buffalo_standard": 2,
+				},
+				"officerShips": {                # ten officers (ruled level 5, 2026-10-25; the Conquest added 2026-11-01)
+					"exiles_midan_conquest_standard": 1,
+					"exiles_midan_champion_assault": 2,
+					"exiles_midan_eagle_assault": 3,
+					"exiles_midan_gryphon_standard": 2,
+					"exiles_midan_hammerhead_balanced": 1,
+					"exiles_midan_sunder_assault": 1,
+				},
+				"officerLevel": 5,
+				# The Ajax's captain (ruled 2026-10-24): level 7; 2 = elite.
+				"captainLevel": 7,
+				"captainSkills": {
+					"helmsmanship": 1,
+					"impact_mitigation": 1,
+					"damage_control": 1,
+					"field_modulation": 2,
+					"target_analysis": 2,
+					"ballistic_mastery": 2,
+					"missile_specialization": 1,
+				},
+				"admiralSkills": ["tactical_drills", "coordinated_maneuvers"],
+				# ESCORTS (ruled 2026-10-25): added until the margin is met, at most escortCap;
+				# above the cap the rung waits for a weaker defence. Escort ROSTER and officers
+				# (ruled 2026-10-29): the main fleet's warships without the Ajax or logistics
+				# (20 ships, 224 FP, measured strength 375), five level-5 officers. Revisit
+				# after 7d-2 shows how long Midan waits at rung 2 (Sphinx).
+				# CURRENTLY UNUSED: escortCapPerRung below has an entry for every rung, so this
+				# fallback is never reached. Kept "just in case" (Sean, 2026-11-08).
+				"escortCap": 2,
+				# RULED 2026-10-31 (option A): Midan sends a stronger task force to make sure the later
+				# blows land. Per rung, ladder order; the 2x margin is unchanged.
+				"escortCapPerRung": [2, 4, 4],
+				# 7e-1 (Sean, 2026-10-31; fixed mix): + a second Conquest and two Medusas per escort,
+				# the Medusas beside -- not instead of -- the Hammerheads (23 ships, 272 FP).
+				"escortRoster": {
+					"exiles_midan_conquest_standard": 1,
+					"exiles_midan_champion_assault": 2,
+					"exiles_midan_eagle_assault": 3,
+					"exiles_midan_falcon_attack": 3,
+					"exiles_midan_gryphon_standard": 2,
+					"exiles_midan_hammerhead_balanced": 4,
+					"exiles_midan_medusa_attack": 2,
+					"exiles_midan_sunder_assault": 3,
+					"exiles_midan_omen_pd": 3,
+				},
+				"escortOfficerShips": {            # six level-5 officers (the Conquest's added 2026-10-31)
+					"exiles_midan_conquest_standard": 1,
+					"exiles_midan_champion_assault": 2,
+					"exiles_midan_eagle_assault": 1,
+					"exiles_midan_gryphon_standard": 2,
+				},
+				"escortOfficerLevel": 5,
+			},
+			# THE STRIKE OPERATION (step 7d-2; plan sec 7 "7d-2 plan"). The Strike Force assembles
+			# in hyperspace off the anchor system, flies League colours, strikes the rung's target
+			# and despawns at the anchor system's hyperspace jump point.
+			"strike": {
+				# BUILD GATE: rungs above this stay log-only (WOULD LAUNCH) until their payloads
+				# exist. 7d-2 built rung 1; 7e-1 rung 2 (Sphinx); 7e-2 rung 3 (Eventide).
+				"maxLaunchRung": 3,
+				# SNEAK ATTACK (ruled 2026-10-30): no intel, no warning, nothing for Nexerelin's task
+				# groups to read. The Strike Force forms up INSIDE the target system, stagingDistance
+				# units from the target, on the bearing farthest from the jump points, the star and
+				# the player (abstract travel: 1500 units/day). The target's emergency call for
+				# assistance -- the first the player hears of it -- goes out when the leading fleet is
+				# distressLeadDays out, with the colony-crisis alarm.
+				"stagingDistance": 7000,
+				"distressLeadDays": 2,
+				"prepDaysMin": 3,              # days at the staging point before the approach
+				"prepDaysMax": 6,
+				# QUEST HOOK (Phase 2): $global.exiles_midan_rungN_hold stops the director launching
+				# rung N itself; $global.exiles_midan_rungN_trigger launches it at the next daily check
+				# (hard rails still apply) with this prep, then the trigger is cleared.
+				"questPrepDays": 0.5,
+				# Ruled 2026-10-30: one-time Hegemony reputation (3 = vanilla MEDIUM) when the player
+				# helps destroy the Ajax, on top of the per-battle bounty reputation.
+				"ajaxKillRep": 3,
+				"abortFraction": 0.5,        # losses abort below this share of launched FP
+				# Spare days a stage may overrun before it fails (vanilla raids: 60). 7e-1 test: a stuck
+				# assembly sat 66 days. ASSISTANT DEFAULT, not ruled.
+				"extraDays": 5,
+				"maxDays": 10,               # strike window in-system (window-end resolves on strength).
+				# Ruled 2026-10-30: 10 (was 45, then 5). Long enough that a fight the player is in decides a
+				# watched strike (it lands only by visible victory); short enough off-screen. Once the call is
+				# out the op is listed, and a
+				# long off-screen wait lets Nexerelin task groups arrive. If a Nex test shows that, split it into
+				# live 10 / off-screen 5 (idea held in reserve, 2026-10-30). The stage floor is 5.
+				"orbitDays": 3,              # the visible beat over the target after landing
+				"unrestPoints": 2,           # SUGGESTION: as an ordinary strike, so it looks like war
+				"systemCooldownDays": 60,
+				# Ruled 2026-10-30: the Hegemony pays its normal bounty for Strike Force kills;
+				# player kills add NO League war weariness (Midan's losses are not the League's).
+				"bountyPerFrigate": 3000,
+				# Ruled 2026-10-11: a landed rung raises tension to AT LEAST these (50 = warning
+				# band, 65 = above hawk, 88 = General Engagement). A foiled rung adds
+				# tension.gains.perMidanInterference instead.
+				"tensionRaiseTo": [50, 65, 88],
+				# Each rung's wound, ladder order. disruptDays: industry id -> days (max semantics).
+				# reliefIndustries/reliefDays: what the Hegemony's relief convoy may shorten, and by
+				# how much in total (ruled: at most half the wound).
+				"rungs": [
+					{   # 1. Citadel Arcadia (ruled 2026-10-10)
+						"disruptDays": { "militarybase": 365, "orbitalstation": 365, "spaceport": 180 },
+						"reliefIndustries": ["militarybase", "orbitalstation"],
+						"reliefDays": 180,
+					},
+					{   # 2. Sphinx (ruled 2026-10-11): fuel 27 months, battlestation + base 18, spaceport
+						# 6; ONE relief record over all four, 9-month budget. (The Diktat fuel embargo that
+						# followed was REMOVED 2026-11-01 by Sean's ruling -- war doc sec 6.1 rung 2.)
+						"disruptDays": { "fuelprod": 810, "battlestation": 540, "militarybase": 540, "spaceport": 180 },
+						"reliefIndustries": ["fuelprod", "battlestation", "militarybase", "spaceport"],
+						"reliefDays": 270,
+					},
+					{   # 3. Eventide (ruled 2026-10-14): PERMANENT, no relief. The wound is midan.eventide{}.
+						"eventideWound": true,
+					},
+				],
+			},
+			# EVENTIDE'S WOUND (step 7e-2; war doc sec 6.1 rung 3). The array dies with the first beat; then
+			# each beat destroys a mirror or shade (a thin, no-salvage debris field where it hung) or knocks
+			# it adrift; the LAST beat is a FULL VANILLA SATURATION BOMBARDMENT (Sean, 2026-11-01: "this is
+			# supposed to be huge"): Stability -10, pollution, every bombardable industry disrupted 365-456
+			# days, size -1 -- vanilla's own settings.json bombard* values -- and only then has the rung
+			# landed; Emergency Measures is armed so it can catch the stability fall. On-screen it plays one
+			# beat at a time after the Strike Force wins at Eventide (Sean, 2026-11-01); off-screen it all
+			# lands at once. If the Strike Force is broken mid-sequence, what fell stays fallen and there is
+			# no bombardment (ruled 2026-10-14).
+			"eventide": {
+				# Split by Sean 2026-11-01: the centre three mirrors and the centre shade destroyed, Epsilon
+				# adrift; mirror Alpha and shades Omega and Chi untouched ("something of Eventide survives").
+				# Entities are matched by NAME (vanilla's shades reuse the mirrors' ids).
+				"beats": [
+					{ "entity": "Eventide Stellar Mirror Gamma",   "action": "destroy" },
+					{ "entity": "Eventide Stellar Shade Psi",      "action": "destroy" },
+					{ "entity": "Eventide Stellar Mirror Beta",    "action": "destroy" },
+					{ "entity": "Eventide Stellar Mirror Delta",   "action": "destroy" },
+					{ "entity": "Eventide Stellar Mirror Epsilon", "action": "adrift" },
+				],
+				"beatDays": 0.6,               # on-screen, per beat (Sean: ~0.6); the bombardment is one more beat
+				# Optional extras, OFF (empty) since 2026-11-01. "exiles_planet_eventide_struck" switches the
+				# planet description on (PLACEHOLDER text in descriptions.csv); an illustration key swaps the art.
+				"planetDescription": "",
+				"adriftDescription": "exiles_eventide_wrecked_mirror",
+				"illustration": "",            # empty = keep vanilla's until Sean's art exists
+				# Cunningham's vow (ruled 2026-10-19): a Story announcement this many days after a LANDED
+				# rung 3 (success only), on the board for vowNoticeDays. PLACEHOLDER text.
+				"vowDelayDays": 5,
+				"vowNoticeDays": 30,
+			},
+			# MIDAN'S PROXY (Pass 7 step 7f; war doc sec 6.2 PASS 7 PROXY DESIGN, ruled 2026-10-19). Every
+			# relief record, either side's, any war state, rolls directiveChance; on success (and none
+			# already active) Midan names that market to the Black Fleet, whose director ambushes the
+			# convoy (exileblackfleet.ambush). Attribution -- tension +6 / the backfire counter -- is NOT
+			# built (deferred by Sean 2026-11-01 to the post-Pass-7 complexity review); each kill is
+			# logged "Exiles Midan PROXY KILL" so the review has the rate.
+			"proxy": {
+				"enabled": true,
+				"directiveChance": 0.5,
+			},
+			# The ladder, in order. Market ids.
+			"targets": ["arcadia_station", "sphinx", "eventide"],
+			# Launch anchors in order of preference (ruled 2026-10-14): Lundy, Sallee, then
+			# Midan's home. STATION ENTITY ids -- markets are resolved through the entity.
+			"launchAnchors": ["exilebf_lundy_station", "exilebf_sallee_station", "exilemidan_haven"],
+			# How often the MEASURE lines for all three targets are written.
+			"measureIntervalDays": 30,
+			# THE OPPORTUNITY SCORE (ruled 2026-10-19), 0..1, checked daily while ready:
+			#   means       = how far the target's defence sits BELOW its running baseline
+			#   distraction = live Hegemony offensive ops / distractionOpsFull (capped at 1)
+			#   cover       = 1 in INCIDENT/RETALIATION/ESCALATION, coverTalks during ceasefire
+			#                 talks, 0 in TENSION/DE_ESCALATION
+			# It must clear a BAR that falls from barStart to barFloor over barDecayDays of
+			# readiness ("impatience" -- the ladder can never stall forever).
+			"score": {
+				"meansWeight": 0.4,
+				"distractionWeight": 0.3,
+				"coverWeight": 0.3,
+				"distractionOpsFull": 2,
+				"coverTalks": 0.5,
+				# The "normal defence" baseline for EVERY target moves this fraction of the way toward
+				# each monthly MEASURE (0.25 = about a 2.4-month memory). Read-only in the daily check.
+				# (Was "baselineWeight" 0.05 per DAY until 2026-10-25: frozen before readiness, and a
+				# two-week memory -- the 7c test record.)
+				"baselineWeightPerMeasure": 0.25,
+				"barStart": 0.6,
+				"barFloor": 0.15,
+				"barDecayDays": 365,
+			},
+		},
+	},
+}

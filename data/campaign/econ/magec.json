@@ -1,0 +1,29 @@
+{
+	"starSystem":"magec",
+	"markets":[
+		{
+
+			"entities":["maxios"],
+			"faction":"exilerefugee",
+			"size":3,
+			"startingConditions":[
+				"population_3",
+				"decivilized",
+				"exile_pariah_colony",
+				"exile_destitute_population",
+				"ruins_extensive",
+				"meteor_impacts",
+				"ore_moderate",
+				"rare_ore_sparse",
+				"hot",
+				"thin_atmosphere"
+			],
+			"industries":[
+				"population",
+				"spaceport",
+				"grounddefenses",
+				"exile_wildcat_mining"
+			]
+		}
+	]
+}
